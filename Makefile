@@ -12,7 +12,7 @@ QS          := qs -c archminimal
 OPEN        := $(shell command -v xdg-open 2>/dev/null || command -v open 2>/dev/null)
 
 PACKAGES := hyprland hypridle hyprlock hyprpolkitagent xdg-desktop-portal-hyprland \
-            kitty quickshell qt6-svg \
+            kitty firefox quickshell qt6-svg \
             papirus-icon-theme ttf-jetbrains-mono ttf-jetbrains-mono-nerd \
             pipewire pipewire-pulse wireplumber playerctl brightnessctl \
             upower power-profiles-daemon bluez bluez-utils bluetui iw \

@@ -6,6 +6,7 @@
 
 local terminal = "kitty"
 local files    = "kitty -e yazi"
+local browser  = "firefox"
 local qs       = "qs -c archminimal ipc call"
 local mod      = "SUPER"
 
@@ -121,19 +122,22 @@ local function run(cmd) return hl.dsp.exec_cmd(cmd) end
 
 -- apps & shell
 bind(mod .. " + Return",      run(terminal))
+bind(mod .. " + T",           run(terminal))
+bind(mod .. " + F",           run(qs .. " launcher toggle"))
+bind(mod .. " + B",           run(browser))
 bind(mod .. " + Space",       run(qs .. " launcher toggle"))
 bind(mod .. " + D",           run(qs .. " launcher toggle"))
 bind(mod .. " + SHIFT + E",   run(qs .. " launcher power"))
-bind(mod .. " + B",           run(qs .. " bar toggle"))
+bind(mod .. " + SHIFT + B",   run(qs .. " bar toggle"))
 bind(mod .. " + E",           run(files))
 bind(mod .. " + Escape",      run("loginctl lock-session"))
 
 -- windows
 bind(mod .. " + Q", hl.dsp.window.close())
-bind(mod .. " + F", hl.dsp.window.fullscreen())
+bind(mod .. " + SHIFT + F", hl.dsp.window.fullscreen())
 bind(mod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 bind(mod .. " + P", hl.dsp.window.pseudo())
-bind(mod .. " + T", hl.dsp.layout("togglesplit"))
+bind(mod .. " + SHIFT + T", hl.dsp.layout("togglesplit"))
 
 -- focus / move / resize: vim keys (and arrows for focus)
 local dirs = { H = "left", J = "down", K = "up", L = "right" }

@@ -60,15 +60,16 @@ It also creates `~/.config/hypr/local.lua` for per-machine settings (not tracked
 
 | Keys | Action |
 |---|---|
-| `Super + Return` | kitty |
-| `Super + Space` / `Super + D` | launcher |
+| `Super + T` / `Super + Return` | kitty |
+| `Super + B` | Firefox |
+| `Super + F` / `Super + Space` / `Super + D` | launcher (pick an app) |
 | `Super + Shift + E` | power menu (lock, suspend, log out, reboot, shut down) |
 | `Super + Escape` | lock |
 | `Super + E` | files (yazi in kitty) |
-| `Super + B` | hide/show the bar |
+| `Super + Shift + B` | hide/show the bar |
 | `Super + Q` | close window |
-| `Super + F` | fullscreen |
-| `Super + V` / `P` / `T` | float / pseudo-tile / toggle split |
+| `Super + Shift + F` | fullscreen |
+| `Super + V` / `P` / `Shift + T` | float / pseudo-tile / toggle split |
 | `Super + H J K L` or arrows | focus |
 | `Super + Shift + H J K L` | move window |
 | `Super + Ctrl + H J K L` | resize (hold) |
