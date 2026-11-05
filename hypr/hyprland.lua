@@ -104,6 +104,20 @@ hl.config({
     },
 })
 
+----------------------
+---- WINDOW RULES ----
+----------------------
+
+-- Apps may not maximize themselves. Hyprland tells every window it is
+-- "maximized" (so apps skip drawing their own title bars); kitty and Firefox
+-- remember that on close and ask to open maximized next time, which hid every
+-- other window on the workspace. Layout changes come only from your keys.
+hl.window_rule({
+    name           = "suppress-maximize-events",
+    match          = { class = ".*" },
+    suppress_event = "maximize",
+})
+
 -- short, snappy animations; no border animation
 hl.curve("snap", { type = "bezier", points = { {0.2, 0.9}, {0.1, 1.0} } })
 hl.animation({ leaf = "global",     enabled = true,  speed = 2,   bezier = "snap" })
