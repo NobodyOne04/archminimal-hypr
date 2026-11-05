@@ -86,7 +86,7 @@
   .tip .cores { display: flex; gap: 3px; align-items: flex-end; height: 26px; margin-top: 6px; }
   .tip .cores i { flex: 1; background: var(--accent); opacity: .7; transition: height .6s; }
 
-  /* ---------- WINDOWS (Ghostty, tiled) ---------- */
+  /* ---------- WINDOWS (kitty, tiled) ---------- */
   .win {
     position: absolute; background: rgba(24, 25, 29, 0.90); border: 1px solid var(--line);
     font-size: 15px; line-height: 1.5; padding: 16px 20px; overflow: hidden; white-space: pre; letter-spacing: .3px;
@@ -157,7 +157,7 @@
       <div class="left">
         <span class="logo" id="logo" title="launcher"></span>
         <div class="ws" id="ws"></div>
-        <span class="title" id="title">ghostty — ~/projects</span>
+        <span class="title" id="title">kitty — ~/projects</span>
       </div>
 
       <div class="clock" id="clock">00:00<span class="date">THU 05 NOV</span></div>
@@ -229,7 +229,7 @@ const ARCH = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor
 document.getElementById("logo").innerHTML = ARCH;
 
 // ---------- workspaces ----------
-const titles = { 1: "ghostty — ~/projects", 2: "firefox — hyprland wiki", 3: "nvim — hyprland.conf", 4: "", 5: "telegram" };
+const titles = { 1: "kitty — ~/projects", 2: "firefox — hyprland wiki", 3: "nvim — hyprland.conf", 4: "", 5: "telegram" };
 let active = 1;
 function renderWs() {
   const ws = document.getElementById("ws"); ws.innerHTML = "";
@@ -310,7 +310,7 @@ ${A("              -+oooooo+:             ")}   ${M("packages")} 812 (pacman)
 ${A("            `/:-:++oooo+:            ")}   ${M("shell   ")}zsh 5.9
 ${A("           `/++++/+++++++:           ")}   ${M("wm      ")}Hyprland
 ${A("          `/++++++++++++++:          ")}   ${M("bar     ")}quickshell
-${A("         `/+++ooooooooooooo/`        ")}   ${M("terminal")} ghostty
+${A("         `/+++ooooooooooooo/`        ")}   ${M("terminal")} kitty
 ${A("        ./ooosssso++osssssso+`       ")}   ${M("font    ")}JetBrains Mono 11
 ${A("       .oossssso-````/ossssss+`      ")}   ${M("cpu     ")}AMD Ryzen 7 7840HS (16)
 ${A("      -osssssso.      :ssssssso.     ")}   ${M("gpu     ")}AMD Radeon 780M
@@ -324,7 +324,7 @@ ${prompt("~/projects")}${F("git status -sb")}
 ${M("## main...origin/main")}
  ${A("M")} hypr/hyprland.conf
  ${A("M")} quickshell/Bar.qml
-${A("??")} ghostty/config
+${A("??")} kitty/config
 
 ${prompt("~/projects")}<span class="cursor"></span>`;
 
@@ -337,7 +337,7 @@ ${M("  pid  user   cpu%  mem%  command")}
  2214  vlad   ${A(" 6.2")}   1.9  ${F("firefox")}
  1031  vlad   ${A(" 2.1")}   0.4  ${F("Hyprland")}
  1187  vlad    0.8   0.3  ${F("quickshell")}
- 2490  vlad    0.4   0.2  ${F("ghostty")}
+ 2490  vlad    0.4   0.2  ${F("kitty")}
  2511  vlad    0.1   0.1  ${F("nvim")}
   642  root    0.0   0.0  ${M("bluetoothd")}`;
 
@@ -359,7 +359,7 @@ ${M("12")}  }`;
 // ---------- launcher ----------
 const tile = (bg, glyph, fg = "#fff") => `<svg class="icon" viewBox="0 0 36 36"><defs><linearGradient id="g${glyph.charCodeAt(0)}${bg.length}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${bg.split(",")[0]}"/><stop offset="1" stop-color="${bg.split(",")[1] || bg.split(",")[0]}"/></linearGradient></defs><rect x="1" y="1" width="34" height="34" rx="9" fill="url(#g${glyph.charCodeAt(0)}${bg.length})"/><text x="18" y="24" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="500" fill="${fg}">${glyph}</text></svg>`;
 const apps = [
-  { n: "Ghostty", d: "terminal", i: tile("#1b1d22,#2c2f36", "›_", "#00e5ff") },
+  { n: "kitty", d: "terminal", i: tile("#1b1d22,#2c2f36", "›_", "#00e5ff") },
   { n: "Firefox", d: "web browser", i: tile("#ff7139,#e31587", "ff") },
   { n: "Neovim", d: "text editor", i: tile("#3c9a3c,#1f6f8b", "nv") },
   { n: "Telegram", d: "messaging", i: tile("#37aee2,#1e96c8", "tg") },
@@ -395,7 +395,7 @@ function renderList() {
   sel = Math.min(sel, Math.max(0, shown.length - 1));
   document.getElementById("q").innerHTML = query ? `<span class="q">${query}</span>` : `<span class="ph">search</span>`;
   const list = document.getElementById("list");
-  list.innerHTML = shown.length ? "" : `<div class="empty">no match · ⏎ runs "${query}" in ghostty</div>`;
+  list.innerHTML = shown.length ? "" : `<div class="empty">no match · ⏎ runs "${query}" in kitty</div>`;
   shown.forEach((a, k) => {
     const el = document.createElement("div");
     el.className = "item" + (k === sel ? " sel" : "");
@@ -409,7 +409,7 @@ function renderList() {
 function openL() { query = ""; sel = 0; screen.classList.add("open"); renderList(); }
 function closeL() { screen.classList.remove("open"); }
 function toast(t) { const el = document.getElementById("toast"); el.textContent = t; el.classList.add("show"); setTimeout(() => el.classList.remove("show"), 1400); }
-function run() { const a = shown[sel]; closeL(); toast(a ? `exec ${a.n.toLowerCase()}` : `ghostty -e ${query}`); }
+function run() { const a = shown[sel]; closeL(); toast(a ? `exec ${a.n.toLowerCase()}` : `kitty -e ${query}`); }
 document.getElementById("btnLauncher").onclick = openL;
 document.getElementById("logo").onclick = openL;
 document.getElementById("scrim").onclick = closeL;

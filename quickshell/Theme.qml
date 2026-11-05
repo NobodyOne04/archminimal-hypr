@@ -23,7 +23,7 @@ Singleton {
     readonly property string home: Quickshell.env("HOME")
     readonly property string wallpaper: home + "/.local/share/archminimal/wallpaper.png"
     readonly property string stateDir: home + "/.local/state/archminimal"
-    readonly property string terminal: "ghostty"
+    readonly property string terminal: "kitty"
     readonly property int workspaces: 5                 // always shown; busy ones beyond are added
     readonly property string gpu: "auto"                // auto | amd | intel | nvidia | none
     readonly property string showKeyboard: "auto"       // auto (2+ layouts) | always | never
@@ -35,7 +35,7 @@ Singleton {
     readonly property int tempHot: 85
     readonly property int batteryLow: 15
 
-    // ---- what clicking a module opens (console tools in Ghostty) ----
+    // ---- what clicking a module opens (console tools in kitty) ----
     readonly property var monitorCmd: [terminal, "-e", "btop"]
     readonly property var networkCmd: [terminal, "-e", "sh", "-c", "command -v nmtui >/dev/null && exec nmtui || exec impala"]
     readonly property var bluetoothCmd: [terminal, "-e", "bluetui"]

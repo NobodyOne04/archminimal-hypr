@@ -6,7 +6,7 @@ A minimal, lightweight Hyprland desktop for Arch Linux in the same style as the
 - **Bar**: workspaces, window title, clock, then CPU, memory, GPU, temperature, network, Bluetooth, keyboard
   layout, volume, battery with power profile, and a power button. Hover any value for details; click to act.
 - **Launcher**: fuzzy search over your apps with real icons (Papirus-Dark), most-used first, and a power menu.
-- **Ghostty**: matching palette; one process serves every window.
+- **kitty**: matching palette, quiet tab bar, works on modest (VM) graphics.
 - **Lock & idle**: hyprlock in the login screen's layout; hypridle dims, locks, turns the screen off and
   suspends.
 - **No notification daemon or notification center**, by design.
@@ -16,7 +16,7 @@ desktop.
 
 > Requires **Hyprland 0.57+**, which uses the Lua config format (`hyprland.lua`). Everything here was checked
 > against Arch's current packages: Hyprland 0.57.1 `--verify-config`, Quickshell 0.3.2 type definitions plus
-> `qmllint`, Ghostty 1.4 `+validate-config`, and the stats collector on real Arch `gawk`. It has not yet run on
+> `qmllint`, kitty's own config parser, and the stats collector on real Arch `gawk`. It has not yet run on
 > real hardware; report anything odd.
 
 ## Why it is light
@@ -27,7 +27,7 @@ desktop.
 | System stats | one long-lived `awk` reading `/proc` and `/sys` every 2 s; no per-tick process spawning |
 | GPU stats | auto-detected; NVIDIA is queried only while the dGPU is awake, so it is never woken up just to be measured |
 | Compositor | no blur, no shadows, short animations |
-| Terminal | Ghostty single-instance: one process for all windows |
+| Terminal | kitty: GPU-rendered but only needs OpenGL 3.3, so it also runs in VMs |
 
 `make memory` shows what it actually uses on your machine.
 
@@ -49,7 +49,7 @@ Then log in to Hyprland (from the [archminimal greeter](../sddm-login/greetd) or
 |---|---|
 | `~/.config/hypr/hyprland.lua`, `hyprlock.conf`, `hypridle.conf` | `hypr/` |
 | `~/.config/quickshell/archminimal` | `quickshell/` |
-| `~/.config/ghostty/config` | `ghostty/config` |
+| `~/.config/kitty/kitty.conf` | `kitty/kitty.conf` |
 | `~/.config/fastfetch/config.jsonc` | `fastfetch/config.jsonc` |
 | `~/.local/share/archminimal/wallpaper.png` | `assets/wallpaper.png` |
 
@@ -60,11 +60,11 @@ It also creates `~/.config/hypr/local.lua` for per-machine settings (not tracked
 
 | Keys | Action |
 |---|---|
-| `Super + Return` | Ghostty |
+| `Super + Return` | kitty |
 | `Super + Space` / `Super + D` | launcher |
 | `Super + Shift + E` | power menu (lock, suspend, log out, reboot, shut down) |
 | `Super + Escape` | lock |
-| `Super + E` | files (yazi in Ghostty) |
+| `Super + E` | files (yazi in kitty) |
 | `Super + B` | hide/show the bar |
 | `Super + Q` | close window |
 | `Super + F` | fullscreen |
@@ -104,8 +104,8 @@ Values turn red past the thresholds in `Theme.qml` (CPU 85 %, memory 85 %, 85 °
 
 Type to fuzzy-search names, descriptions and keywords; matched letters are highlighted by position, apps you
 launch often rise to the top. `↑ ↓` (or `Ctrl + J/K`) select, `Enter` runs, `Tab` completes, `Esc` or a click
-outside closes. If nothing matches, `Enter` runs what you typed as a command in Ghostty. Terminal apps
-(`Terminal=true`) open in Ghostty automatically. Power actions are searchable too (`reb` → Reboot).
+outside closes. If nothing matches, `Enter` runs what you typed as a command in kitty. Terminal apps
+(`Terminal=true`) open in kitty automatically. Power actions are searchable too (`reb` → Reboot).
 
 ## Customize
 
@@ -159,7 +159,7 @@ archminimal-hypr/
 │   ├── Launcher.qml  LauncherState.qml
 │   ├── Stats.qml  Keyboard.qml  Wallpaper.qml
 │   └── scripts/stats.sh, stats.awk   system stats collector
-├── ghostty/config
+├── kitty/kitty.conf
 ├── fastfetch/config.jsonc
 ├── assets/wallpaper.png
 ├── preview/index.html        interactive design mock-up

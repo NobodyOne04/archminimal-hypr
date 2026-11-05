@@ -12,7 +12,7 @@ QS          := qs -c archminimal
 OPEN        := $(shell command -v xdg-open 2>/dev/null || command -v open 2>/dev/null)
 
 PACKAGES := hyprland hypridle hyprlock hyprpolkitagent xdg-desktop-portal-hyprland \
-            ghostty quickshell qt6-svg \
+            kitty quickshell qt6-svg \
             papirus-icon-theme ttf-jetbrains-mono ttf-jetbrains-mono-nerd \
             pipewire pipewire-pulse wireplumber playerctl brightnessctl \
             upower power-profiles-daemon bluez bluez-utils bluetui iw \
@@ -32,7 +32,7 @@ services: ## Enable bluetooth and power profiles (asks for sudo)
 
 check: ## Verify that the tools, fonts and icon theme are present
 	@ok=1; \
-	for c in Hyprland hyprctl hypridle hyprlock qs ghostty grim slurp wl-copy wpctl brightnessctl playerctl btop; do \
+	for c in Hyprland hyprctl hypridle hyprlock qs kitty grim slurp wl-copy wpctl brightnessctl playerctl btop; do \
 		if command -v $$c >/dev/null 2>&1; then printf "  ok       %s\n" $$c; else printf "  MISSING  %s\n" $$c; ok=0; fi; \
 	done; \
 	for f in "JetBrains Mono" "JetBrainsMono Nerd Font"; do \
@@ -83,5 +83,5 @@ logs: ## Show the bar/launcher log
 	$(QS) log
 
 memory: ## Show memory used by the desktop pieces
-	@ps -C quickshell,qs,Hyprland,hypridle,ghostty -o rss=,comm= 2>/dev/null | \
+	@ps -C quickshell,qs,Hyprland,hypridle,kitty -o rss=,comm= 2>/dev/null | \
 		awk '{ printf "  %-12s %6.1f MB\n", $$2, $$1/1024; t += $$1 } END { printf "  %-12s %6.1f MB\n", "total", t/1024 }'

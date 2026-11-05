@@ -17,13 +17,41 @@ hypr/hyprland.lua       $CONF/hypr/hyprland.lua
 hypr/hyprlock.conf      $CONF/hypr/hyprlock.conf
 hypr/hypridle.conf      $CONF/hypr/hypridle.conf
 quickshell              $CONF/quickshell/archminimal
-ghostty/config          $CONF/ghostty/config
+kitty/kitty.conf        $CONF/kitty/kitty.conf
 fastfetch/config.jsonc  $CONF/fastfetch/config.jsonc
 assets/wallpaper.png    $DATA/archminimal/wallpaper.png
 "
 
+# Links from older versions that no longer exist in the repo
+# (Ghostty was replaced by kitty). Removed on install; any backup restored.
+RETIRED="
+ghostty/config          $CONF/ghostty/config
+"
+
+restore_backup() {
+    dst=$1
+    [ -f "$LEDGER" ] || return 0
+    bak=$(awk -v d="$dst" '$1 == d { b = $2 } END { print b }' "$LEDGER")
+    if [ -n "$bak" ] && { [ -e "$bak" ] || [ -L "$bak" ]; }; then
+        mv "$bak" "$dst"
+        echo "  restore $dst"
+    fi
+}
+
+remove_retired() {
+    echo "$RETIRED" | while read -r src dst; do
+        [ -n "$src" ] || continue
+        if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$REPO/$src" ]; then
+            rm "$dst"
+            echo "  retire  $dst (no longer used)"
+            restore_backup "$dst"
+        fi
+    done
+}
+
 install_links() {
     mkdir -p "$STATE"
+    remove_retired
     echo "$LINKS" | while read -r src dst; do
         [ -n "$src" ] || continue
         mkdir -p "$(dirname "$dst")"
@@ -51,14 +79,7 @@ uninstall_links() {
         if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$REPO/$src" ]; then
             rm "$dst"
             echo "  unlink  $dst"
-            # restore the most recent backup of this path, if any
-            if [ -f "$LEDGER" ]; then
-                bak=$(awk -v d="$dst" '$1 == d { b = $2 } END { print b }' "$LEDGER")
-                if [ -n "$bak" ] && { [ -e "$bak" ] || [ -L "$bak" ]; }; then
-                    mv "$bak" "$dst"
-                    echo "  restore $dst"
-                fi
-            fi
+            restore_backup "$dst"
         fi
     done
     echo "  kept    $CONF/hypr/local.lua"

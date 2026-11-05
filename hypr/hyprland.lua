@@ -4,8 +4,8 @@
 -- │ login screen. Per-machine settings go in local.lua.           │
 -- └──────────────────────────────────────────────────────────────┘
 
-local terminal = "ghostty"
-local files    = "ghostty -e yazi"
+local terminal = "kitty"
+local files    = "kitty -e yazi"
 local qs       = "qs -c archminimal ipc call"
 local mod      = "SUPER"
 
