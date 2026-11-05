@@ -1,0 +1,9 @@
+-- Per-machine settings. `make install` copies this to ~/.config/hypr/local.lua
+-- (not tracked in git). Anything here overrides hyprland.lua.
+
+-- Laptop panel at 1.25 scale, external monitor to the right:
+-- hl.monitor({ output = "eDP-1", mode = "preferred", position = "0x0", scale = 1.25 })
+-- hl.monitor({ output = "DP-1",  mode = "2560x1440@144", position = "auto-right", scale = 1 })
+
+-- A second keyboard layout (the bar shows "kb" automatically):
+-- hl.config({ input = { kb_layout = "us,ru", kb_options = "grp:alt_shift_toggle" } })

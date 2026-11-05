@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>archminimal-hypr — desktop preview</title>
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap");
+
+  :root {
+    --bg: #28292d;
+    --bar: rgba(22, 23, 26, 0.78);
+    --panel: #18191d;
+    --fg: #d0d2d0;
+    --mute: #7d8088;
+    --line: #3a3c44;
+    --accent: #00e5ff;
+    --danger: #ff2a6d;
+    --ok: #9ece6a;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #111215; color: var(--fg); font-family: var(--mono); }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 18px; }
+
+  /* ---------- page chrome (not part of the desktop) ---------- */
+  .controls { display: flex; gap: 10px; align-items: center; font-size: 11px; color: var(--mute); letter-spacing: 1px; flex-wrap: wrap; justify-content: center; }
+  .controls button {
+    font: inherit; color: var(--fg); background: transparent; border: 1px solid var(--line);
+    padding: 5px 10px; cursor: pointer; letter-spacing: 1px;
+  }
+  .controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .controls kbd { color: var(--accent); }
+  .swatch { width: 14px; height: 14px; display: inline-block; cursor: pointer; border: 1px solid #0005; }
+
+  /* ---------- the screen: 1920x1080 scaled to fit ---------- */
+  .frame { width: min(96vw, calc((100vh - 110px) * 16 / 9)); aspect-ratio: 16 / 9; position: relative; box-shadow: 0 20px 60px #000a; }
+  .screen {
+    position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0;
+    background: var(--bg) url("../assets/wallpaper.png") center / cover no-repeat; overflow: hidden;
+  }
+  .screen::after { /* faint scanlines, like the login screen */
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .05;
+    background: repeating-linear-gradient(to bottom, #000 0 1px, transparent 1px 4px);
+  }
+
+  /* ---------- BAR ---------- */
+  .bar {
+    position: absolute; left: 0; right: 0; top: 0; height: 32px; z-index: 5;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 18px; background: var(--bar); border-bottom: 1px solid #ffffff0d;
+    font-size: 12px; letter-spacing: 1.5px;
+  }
+  .bar .left, .bar .right { display: flex; align-items: center; gap: 20px; }
+  .bar .right { justify-content: flex-end; gap: 18px; }
+  .logo { color: var(--accent); font-size: 13px; cursor: pointer; }
+  .logo:hover { text-shadow: 0 0 8px var(--accent); }
+  .ws { display: flex; gap: 4px; }
+  .ws span { width: 24px; text-align: center; color: #565962; position: relative; cursor: pointer; padding: 6px 0; }
+  .ws span.occ { color: var(--mute); }
+  .ws span.on { color: var(--accent); }
+  .ws span.on::after { content: ""; position: absolute; left: 6px; right: 6px; bottom: 2px; height: 1px; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .title { color: var(--mute); max-width: 420px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: lowercase; }
+  .clock { position: absolute; left: 50%; transform: translateX(-50%); color: var(--fg); letter-spacing: 3px; }
+  .clock .date { color: var(--mute); margin-left: 12px; letter-spacing: 2px; font-size: 11px; }
+
+  .mod { display: flex; align-items: center; gap: 7px; position: relative; cursor: default; white-space: nowrap; }
+  .mod .k { color: var(--mute); font-size: 10px; letter-spacing: 2px; }
+  .mod .v { color: var(--fg); }
+  .mod.hot .v { color: var(--danger); }
+  .mod.acc .v { color: var(--accent); }
+  .meter { width: 22px; height: 2px; background: #ffffff14; position: relative; }
+  .meter i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--mute); transition: width .6s; }
+  .mod.hot .meter i { background: var(--danger); }
+  .sep { width: 1px; height: 12px; background: var(--line); }
+  .power { color: var(--mute); cursor: pointer; font-size: 13px; }
+  .power:hover { color: var(--danger); }
+
+  .tip {
+    position: absolute; top: 30px; right: -8px; min-width: 210px; padding: 12px 14px; z-index: 20;
+    background: var(--panel); border: 1px solid #00e5ff26; font-size: 11px; letter-spacing: 1px;
+    display: none; line-height: 1.9; color: var(--mute);
+  }
+  .tip b { color: var(--fg); font-weight: 400; float: right; margin-left: 18px; }
+  .mod:hover .tip { display: block; }
+  .tip .cores { display: flex; gap: 3px; align-items: flex-end; height: 26px; margin-top: 6px; }
+  .tip .cores i { flex: 1; background: var(--accent); opacity: .7; transition: height .6s; }
+
+  /* ---------- WINDOWS (Ghostty, tiled) ---------- */
+  .win {
+    position: absolute; background: rgba(24, 25, 29, 0.90); border: 1px solid var(--line);
+    font-size: 15px; line-height: 1.5; padding: 16px 20px; overflow: hidden; white-space: pre; letter-spacing: .3px;
+  }
+  .win.focus { border-color: var(--accent); box-shadow: 0 0 0 1px #00e5ff10, 0 0 24px #00e5ff14; }
+  .c-a { color: var(--accent); } .c-m { color: var(--mute); } .c-d { color: var(--danger); } .c-g { color: var(--ok); } .c-f { color: var(--fg); }
+  .cursor { display: inline-block; width: 9px; height: 18px; background: var(--accent); vertical-align: -3px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ---------- LAUNCHER ---------- */
+  .scrim { position: absolute; inset: 0; background: #0000004d; z-index: 9; display: none; }
+  .launcher {
+    position: absolute; left: 50%; top: 250px; width: 620px; transform: translateX(-50%);
+    background: var(--panel); border: 1px solid #00e5ff2e; z-index: 10; display: none;
+    box-shadow: 0 30px 80px #000a;
+  }
+  .open .scrim, .open .launcher { display: block; }
+  .launcher .corner { position: absolute; width: 12px; height: 12px; border-color: var(--accent); border-style: solid; opacity: .7; }
+  .corner.tl { left: -1px; top: -1px; border-width: 1px 0 0 1px; }
+  .corner.tr { right: -1px; top: -1px; border-width: 1px 1px 0 0; }
+  .corner.bl { left: -1px; bottom: -1px; border-width: 0 0 1px 1px; }
+  .corner.br { right: -1px; bottom: -1px; border-width: 0 1px 1px 0; }
+  .search { display: flex; align-items: center; gap: 12px; padding: 18px 22px; border-bottom: 1px solid #ffffff0f; font-size: 17px; }
+  .search .p { color: var(--accent); }
+  .search .q { color: var(--fg); letter-spacing: 1px; }
+  .search .ph { color: var(--mute); letter-spacing: 2px; }
+  .search .hint { margin-left: auto; color: var(--mute); font-size: 11px; letter-spacing: 2px; }
+  .list { padding: 8px 0; max-height: 490px; overflow: hidden; }
+  .item { display: flex; align-items: center; gap: 16px; padding: 9px 22px; position: relative; cursor: pointer; }
+  .item.sel { background: #00e5ff0d; }
+  .item.sel::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .item .icon { width: 36px; height: 36px; flex: none; }
+  .item .name { font-size: 15px; color: var(--fg); letter-spacing: .5px; }
+  .item .name em { color: var(--accent); font-style: normal; }
+  .item .desc { font-size: 11px; color: var(--mute); letter-spacing: 1px; margin-top: 2px; }
+  .item .kind { margin-left: auto; font-size: 10px; color: #565962; letter-spacing: 2px; }
+  .empty { padding: 26px 22px; color: var(--mute); font-size: 12px; letter-spacing: 2px; }
+  .foot { display: flex; gap: 22px; padding: 10px 22px; border-top: 1px solid #ffffff0f; font-size: 10px; color: var(--mute); letter-spacing: 2px; }
+  .foot b { color: var(--fg); font-weight: 400; }
+
+  .toast {
+    position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); z-index: 12;
+    font-size: 12px; letter-spacing: 2px; color: var(--mute); background: var(--panel);
+    border: 1px solid var(--line); padding: 8px 16px; opacity: 0; transition: opacity .3s;
+  }
+  .toast.show { opacity: 1; }
+  .note { font-size: 10px; color: #565962; letter-spacing: 1px; max-width: 980px; text-align: center; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <button id="btnLauncher">launcher · <kbd>super+space</kbd></button>
+  <button id="btnLaptop">mode: laptop</button>
+  <span>accent</span>
+  <span class="swatch" style="background:#00e5ff" data-c="#00e5ff"></span>
+  <span class="swatch" style="background:#ff2a6d" data-c="#ff2a6d"></span>
+  <span class="swatch" style="background:#b026ff" data-c="#b026ff"></span>
+  <span class="swatch" style="background:#9ece6a" data-c="#9ece6a"></span>
+  <span>· keys: <kbd>1–5</kbd> workspaces, <kbd>/</kbd> launcher, type to filter, <kbd>↑↓ ⏎ esc</kbd></span>
+</div>
+
+<div class="frame" id="frame">
+  <div class="screen" id="screen">
+
+    <!-- BAR -->
+    <div class="bar">
+      <div class="left">
+        <span class="logo" id="logo" title="launcher"></span>
+        <div class="ws" id="ws"></div>
+        <span class="title" id="title">ghostty — ~/projects</span>
+      </div>
+
+      <div class="clock" id="clock">00:00<span class="date">THU 05 NOV</span></div>
+
+      <div class="right">
+        <div class="mod" id="m-cpu"><span class="k">cpu</span><span class="v">0%</span><span class="meter"><i></i></span>
+          <div class="tip">cpu · ryzen 7 7840hs<b id="t-cpu-temp">54°</b><br>load avg<b id="t-load">0.42 0.38 0.31</b>
+            <div class="cores" id="cores"></div></div>
+        </div>
+        <div class="mod" id="m-ram"><span class="k">mem</span><span class="v">0G</span><span class="meter"><i></i></span>
+          <div class="tip">used<b id="t-ram">4.1 / 31.2 G</b><br>swap<b>0.0 / 8.0 G</b><br>cache<b>6.3 G</b></div>
+        </div>
+        <div class="mod" id="m-gpu"><span class="k">gpu</span><span class="v">0%</span><span class="meter"><i></i></span>
+          <div class="tip">radeon 780m<b id="t-gpu-temp">47°</b><br>vram<b id="t-vram">1.2 / 8.0 G</b><br>power<b id="t-gpu-w">6 W</b></div>
+        </div>
+        <div class="mod" id="m-temp"><span class="k">tmp</span><span class="v">54°</span></div>
+        <span class="sep"></span>
+        <div class="mod" id="m-net"><span class="k">net</span><span class="v">↓ 1.2M</span>
+          <div class="tip">wlan0 · home-5g<b>-48 dBm</b><br>down<b id="t-down">1.2 MB/s</b><br>up<b id="t-up">84 KB/s</b><br>ip<b>192.168.1.24</b></div>
+        </div>
+        <div class="mod acc" id="m-bt"><span class="k">bt</span><span class="v">wh-1000</span>
+          <div class="tip">bluetooth on<b>1 device</b><br>wh-1000xm5<b>82%</b><br><span class="c-m">click: open bluetui</span></div>
+        </div>
+        <div class="mod" id="m-kb"><span class="k">kb</span><span class="v" id="kb">us</span>
+          <div class="tip">layouts<b>us · ru</b><br>switch<b>alt+shift</b></div>
+        </div>
+        <div class="mod" id="m-vol"><span class="k">vol</span><span class="v">64%</span>
+          <div class="tip">output<b>wh-1000xm5</b><br>mic<b>muted</b><br><span class="c-m">scroll: volume · click: mute</span></div>
+        </div>
+        <div class="mod" id="m-bat"><span class="k">bat</span><span class="v">87%</span>
+          <div class="tip">status<b id="t-bat">discharging</b><br>remaining<b>5 h 12 min</b><br>power draw<b>7.8 W</b><br>profile<b>balanced</b></div>
+        </div>
+        <span class="sep"></span>
+        <span class="power" title="power menu">⏻</span>
+      </div>
+    </div>
+
+    <!-- WINDOWS -->
+    <div class="win focus" id="w1" style="left:14px; top:46px; width:1080px; height:1020px;"></div>
+    <div class="win" id="w2" style="left:1104px; top:46px; width:802px; height:505px;"></div>
+    <div class="win" id="w3" style="left:1104px; top:561px; width:802px; height:505px;"></div>
+
+    <!-- LAUNCHER -->
+    <div class="scrim" id="scrim"></div>
+    <div class="launcher" id="launcher">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div class="search"><span class="p">›</span><span id="q"></span><span class="cursor"></span><span class="hint">sys::run</span></div>
+      <div class="list" id="list"></div>
+      <div class="foot"><span><b>↑↓</b> select</span><span><b>⏎</b> run</span><span><b>tab</b> complete</span><span><b>esc</b> close</span><span style="margin-left:auto" id="count"></span></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<div class="note">
+  Preview only: stats are simulated. Real icons come from your icon theme (Papirus-Dark recommended); the launcher here
+  uses drawn stand-ins. Everything else (spacing, fonts, colors, behavior) is what the Hyprland setup will look like.
+</div>
+
+<script>
+// ---------- scale the 1920x1080 screen into the frame ----------
+const frame = document.getElementById("frame"), screen = document.getElementById("screen");
+function fit() { screen.style.transform = `scale(${frame.clientWidth / 1920})`; }
+addEventListener("resize", fit); fit();
+
+// ---------- arch logo glyph (svg) ----------
+const ARCH = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px"><path d="M12 1.5c-.9 2.2-1.5 3.7-2.5 5.9.6.6 1.4 1.3 2.6 2.1-1.3-.5-2.2-1.1-2.9-1.7C7.8 11 5.7 15 1.5 22.5c3.3-1.9 5.8-3.1 8.2-3.5-.1-.4-.2-.9-.2-1.4v-.1c.1-2 1.1-3.6 2.4-3.5 1.3.1 2.2 1.8 2.2 3.8 0 .4-.1.7-.1 1.1 2.4.5 4.9 1.7 8.1 3.6-.6-1.2-1.2-2.3-1.7-3.3-1-.8-2-1.8-4.1-2.9 1.4.4 2.5.8 3.3 1.3C15.4 9.5 14.3 6.3 12 1.5z"/></svg>`;
+document.getElementById("logo").innerHTML = ARCH;
+
+// ---------- workspaces ----------
+const titles = { 1: "ghostty — ~/projects", 2: "firefox — hyprland wiki", 3: "nvim — hyprland.conf", 4: "", 5: "telegram" };
+let active = 1;
+function renderWs() {
+  const ws = document.getElementById("ws"); ws.innerHTML = "";
+  for (let i = 1; i <= 5; i++) {
+    const s = document.createElement("span");
+    s.textContent = String(i).padStart(2, "0");
+    s.className = (i === active ? "on" : "") + (titles[i] ? " occ" : "");
+    s.onclick = () => { active = i; renderWs(); };
+    ws.appendChild(s);
+  }
+  document.getElementById("title").textContent = titles[active] || "~";
+  for (const id of ["w1", "w2", "w3"]) document.getElementById(id).style.display = active === 1 ? "" : "none";
+}
+renderWs();
+
+// ---------- clock ----------
+function tick() {
+  const d = new Date();
+  const hm = d.toTimeString().slice(0, 5);
+  const date = d.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" }).replace(",", "").toUpperCase();
+  document.getElementById("clock").innerHTML = `${hm}<span class="date">${date}</span>`;
+}
+setInterval(tick, 1000); tick();
+
+// ---------- simulated stats ----------
+const cores = document.getElementById("cores");
+for (let i = 0; i < 16; i++) cores.appendChild(document.createElement("i"));
+let cpu = 12, ram = 4.1, gpu = 7, down = 1.2, bat = 87, charging = false;
+function setMod(id, value, pct, hot) {
+  const m = document.getElementById(id);
+  m.querySelector(".v").textContent = value;
+  const meter = m.querySelector(".meter i"); if (meter) meter.style.width = Math.min(100, pct) + "%";
+  m.classList.toggle("hot", !!hot);
+}
+function stats() {
+  cpu = Math.max(2, Math.min(97, cpu + (Math.random() - .5) * 18 + (Math.random() < .05 ? 50 : 0)));
+  ram = Math.max(3, Math.min(30, ram + (Math.random() - .5) * .3));
+  gpu = Math.max(0, Math.min(99, gpu + (Math.random() - .5) * 10));
+  down = Math.max(0, down + (Math.random() - .5) * .8);
+  setMod("m-cpu", Math.round(cpu) + "%", cpu, cpu > 85);
+  setMod("m-ram", ram.toFixed(1) + "G", ram / 31.2 * 100, ram > 26);
+  setMod("m-gpu", Math.round(gpu) + "%", gpu, gpu > 90);
+  const t = Math.round(48 + cpu * .35);
+  setMod("m-temp", t + "°", 0, t > 85);
+  document.getElementById("t-cpu-temp").textContent = t + "°";
+  document.getElementById("t-ram").textContent = ram.toFixed(1) + " / 31.2 G";
+  setMod("m-net", "↓ " + (down < 1 ? Math.round(down * 1000) + "K" : down.toFixed(1) + "M"), 0);
+  document.getElementById("t-down").textContent = down.toFixed(1) + " MB/s";
+  [...cores.children].forEach(c => c.style.height = Math.max(8, Math.min(100, cpu + (Math.random() - .5) * 60)) + "%");
+  const batEl = document.getElementById("m-bat");
+  setMod("m-bat", (charging ? "↑" : "") + bat + "%", 0, !charging && bat <= 15);
+  batEl.classList.toggle("acc", charging);
+}
+setInterval(stats, 1500); stats();
+
+let laptop = true;
+document.getElementById("btnLaptop").onclick = e => {
+  laptop = !laptop;
+  e.target.textContent = "mode: " + (laptop ? "laptop" : "desktop");
+  document.getElementById("m-bat").style.display = laptop ? "" : "none";
+};
+document.getElementById("m-bat").onclick = () => { charging = !charging; document.getElementById("t-bat").textContent = charging ? "charging" : "discharging"; stats(); };
+document.getElementById("m-kb").onclick = () => { const k = document.getElementById("kb"); k.textContent = k.textContent === "us" ? "ru" : "us"; };
+document.querySelectorAll(".swatch").forEach(s => s.onclick = () => document.documentElement.style.setProperty("--accent", s.dataset.c));
+
+// ---------- terminal contents ----------
+const A = s => `<span class="c-a">${s}</span>`, M = s => `<span class="c-m">${s}</span>`, F = s => `<span class="c-f">${s}</span>`;
+const prompt = (dir) => `${M(dir)} ${A("›")} `;
+document.getElementById("w1").innerHTML =
+`${prompt("~/projects")}${F("fastfetch")}
+
+${A("                  -`                 ")}   ${A("vlad")}${M("@")}${A("arch")}
+${A("                 .o+`                ")}   ${M("────────────────────────")}
+${A("                `ooo/                ")}   ${M("os      ")}Arch Linux x86_64
+${A("               `+oooo:               ")}   ${M("kernel  ")}6.17.7-arch1-1
+${A("              `+oooooo:              ")}   ${M("uptime  ")}2 hours, 14 mins
+${A("              -+oooooo+:             ")}   ${M("packages")} 812 (pacman)
+${A("            `/:-:++oooo+:            ")}   ${M("shell   ")}zsh 5.9
+${A("           `/++++/+++++++:           ")}   ${M("wm      ")}Hyprland
+${A("          `/++++++++++++++:          ")}   ${M("bar     ")}quickshell
+${A("         `/+++ooooooooooooo/`        ")}   ${M("terminal")} ghostty
+${A("        ./ooosssso++osssssso+`       ")}   ${M("font    ")}JetBrains Mono 11
+${A("       .oossssso-````/ossssss+`      ")}   ${M("cpu     ")}AMD Ryzen 7 7840HS (16)
+${A("      -osssssso.      :ssssssso.     ")}   ${M("gpu     ")}AMD Radeon 780M
+${A("     :osssssss/        osssso+++.    ")}   ${M("memory  ")}4.1 GiB / 31.2 GiB
+${A("    /ossssssss/        +ssssooo/-    ")}
+${A("  `/ossssso+/:-        -:/+osssso+-  ")}   <span style="background:#28292d">   </span><span style="background:#7d8088">   </span><span style="background:#d0d2d0">   </span><span style="background:#00e5ff">   </span><span style="background:#ff2a6d">   </span><span style="background:#9ece6a">   </span>
+${A(" `+sso+:-`                 `.-/+oso: ")}
+${A("`++:.                           `-/+/")}
+
+${prompt("~/projects")}${F("git status -sb")}
+${M("## main...origin/main")}
+ ${A("M")} hypr/hyprland.conf
+ ${A("M")} quickshell/Bar.qml
+${A("??")} ghostty/config
+
+${prompt("~/projects")}<span class="cursor"></span>`;
+
+document.getElementById("w2").innerHTML =
+`${prompt("~")}${F("btop --preset 1")}
+${M("cpu")} ${A("▁▂▃▅▂▁▁▂▄▇▅▃▂▁▁▂▃▂▁▁▁▂▃▄▃▂▁▂▁▁")}  ${F("12%")}
+${M("mem")} ${A("████████")}${M("░░░░░░░░░░░░░░░░░░░░░░")}  ${F("4.1G")}
+
+${M("  pid  user   cpu%  mem%  command")}
+ 2214  vlad   ${A(" 6.2")}   1.9  ${F("firefox")}
+ 1031  vlad   ${A(" 2.1")}   0.4  ${F("Hyprland")}
+ 1187  vlad    0.8   0.3  ${F("quickshell")}
+ 2490  vlad    0.4   0.2  ${F("ghostty")}
+ 2511  vlad    0.1   0.1  ${F("nvim")}
+  642  root    0.0   0.0  ${M("bluetoothd")}`;
+
+document.getElementById("w3").innerHTML =
+`${M("hypr/hyprland.conf")}                          ${M("nvim")}
+${M(" 1")}  ${A("general")} {
+${M(" 2")}      gaps_in      = ${F("5")}
+${M(" 3")}      gaps_out     = ${F("10")}
+${M(" 4")}      border_size  = ${F("1")}
+${M(" 5")}      col.active_border   = ${A("rgb(00e5ff)")}
+${M(" 6")}      col.inactive_border = ${M("rgb(3a3c44)")}
+${M(" 7")}      layout       = ${F("dwindle")}
+${M(" 8")}  }
+${M(" 9")}  ${A("decoration")} {
+${M("10")}      rounding     = ${F("0")}
+${M("11")}      ${A("blur")} { enabled = ${F("false")} }
+${M("12")}  }`;
+
+// ---------- launcher ----------
+const tile = (bg, glyph, fg = "#fff") => `<svg class="icon" viewBox="0 0 36 36"><defs><linearGradient id="g${glyph.charCodeAt(0)}${bg.length}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${bg.split(",")[0]}"/><stop offset="1" stop-color="${bg.split(",")[1] || bg.split(",")[0]}"/></linearGradient></defs><rect x="1" y="1" width="34" height="34" rx="9" fill="url(#g${glyph.charCodeAt(0)}${bg.length})"/><text x="18" y="24" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="500" fill="${fg}">${glyph}</text></svg>`;
+const apps = [
+  { n: "Ghostty", d: "terminal", i: tile("#1b1d22,#2c2f36", "›_", "#00e5ff") },
+  { n: "Firefox", d: "web browser", i: tile("#ff7139,#e31587", "ff") },
+  { n: "Neovim", d: "text editor", i: tile("#3c9a3c,#1f6f8b", "nv") },
+  { n: "Telegram", d: "messaging", i: tile("#37aee2,#1e96c8", "tg") },
+  { n: "Obsidian", d: "notes", i: tile("#8f5fe8,#5b2fc7", "ob") },
+  { n: "Spotify", d: "music", i: tile("#1ed760,#169c46", "sp", "#0d0d0d") },
+  { n: "Discord", d: "voice & chat", i: tile("#5865f2,#4752c4", "dc") },
+  { n: "Steam", d: "games", i: tile("#1b2838,#2a475e", "st", "#66c0f4") },
+  { n: "btop", d: "system monitor", i: tile("#1b1d22,#2c2f36", "bt", "#9ece6a") },
+  { n: "Files", d: "yazi file manager", i: tile("#e3b341,#c88a12", "fs", "#1b1d22") },
+  { n: "Visual Studio Code", d: "code editor", i: tile("#2489ca,#1070b3", "vs") },
+  { n: "Bluetooth", d: "bluetui", i: tile("#2f6bd7,#1d4eb0", "bt") },
+  { n: "Wi-Fi", d: "impala", i: tile("#1b1d22,#2c2f36", "wi", "#00e5ff") },
+  { n: "Screenshot", d: "region → clipboard", i: tile("#ff2a6d,#c4174f", "ss") },
+  { n: "Lock", d: "hyprlock", i: tile("#28292d,#3a3c44", "lk", "#d0d2d0") },
+  { n: "Power off", d: "systemctl poweroff", i: tile("#28292d,#3a3c44", "⏻", "#ff2a6d") },
+];
+let query = "", sel = 0, shown = [];
+const isOpen = () => screen.classList.contains("open");
+function score(a, q) { // tiny fuzzy match: all chars in order
+  if (!q) return 1;
+  const s = (a.n + " " + a.d).toLowerCase(); let i = 0, pts = 0;
+  for (const c of q.toLowerCase()) { const j = s.indexOf(c, i); if (j < 0) return 0; pts += j === i ? 2 : 1; i = j + 1; }
+  return pts + (a.n.toLowerCase().startsWith(q.toLowerCase()) ? 10 : 0);
+}
+function hl(name) {
+  if (!query) return name;
+  let out = "", i = 0; const lc = name.toLowerCase();
+  for (const c of query.toLowerCase()) { const j = lc.indexOf(c, i); if (j < 0) break; out += name.slice(i, j) + "<em>" + name[j] + "</em>"; i = j + 1; }
+  return out + name.slice(i);
+}
+function renderList() {
+  shown = apps.map(a => [a, score(a, query)]).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]).map(x => x[0]).slice(0, 8);
+  sel = Math.min(sel, Math.max(0, shown.length - 1));
+  document.getElementById("q").innerHTML = query ? `<span class="q">${query}</span>` : `<span class="ph">search</span>`;
+  const list = document.getElementById("list");
+  list.innerHTML = shown.length ? "" : `<div class="empty">no match · ⏎ runs "${query}" in ghostty</div>`;
+  shown.forEach((a, k) => {
+    const el = document.createElement("div");
+    el.className = "item" + (k === sel ? " sel" : "");
+    el.innerHTML = `${a.i}<div><div class="name">${hl(a.n)}</div><div class="desc">${a.d}</div></div><span class="kind">${k === sel ? "⏎" : ""}</span>`;
+    el.onmouseenter = () => { sel = k; renderList(); };
+    el.onclick = () => run();
+    list.appendChild(el);
+  });
+  document.getElementById("count").textContent = `${shown.length}/${apps.length}`;
+}
+function openL() { query = ""; sel = 0; screen.classList.add("open"); renderList(); }
+function closeL() { screen.classList.remove("open"); }
+function toast(t) { const el = document.getElementById("toast"); el.textContent = t; el.classList.add("show"); setTimeout(() => el.classList.remove("show"), 1400); }
+function run() { const a = shown[sel]; closeL(); toast(a ? `exec ${a.n.toLowerCase()}` : `ghostty -e ${query}`); }
+document.getElementById("btnLauncher").onclick = openL;
+document.getElementById("logo").onclick = openL;
+document.getElementById("scrim").onclick = closeL;
+addEventListener("keydown", e => {
+  if (!isOpen()) {
+    if (e.key === "/" || (e.key === " " && (e.metaKey || e.ctrlKey))) { e.preventDefault(); openL(); }
+    else if (/^[1-5]$/.test(e.key)) { active = +e.key; renderWs(); }
+    return;
+  }
+  if (e.key === "Escape") closeL();
+  else if (e.key === "ArrowDown") { sel = Math.min(sel + 1, shown.length - 1); renderList(); }
+  else if (e.key === "ArrowUp") { sel = Math.max(sel - 1, 0); renderList(); }
+  else if (e.key === "Enter") run();
+  else if (e.key === "Tab") { e.preventDefault(); if (shown[sel]) { query = shown[sel].n.toLowerCase(); renderList(); } }
+  else if (e.key === "Backspace") { query = query.slice(0, -1); sel = 0; renderList(); }
+  else if (e.key.length === 1 && !e.metaKey && !e.ctrlKey) { query += e.key; sel = 0; renderList(); }
+  else return;
+  e.preventDefault();
+});
+setTimeout(openL, 600); // show the launcher once on load
+</script>
+</body>
+</html>

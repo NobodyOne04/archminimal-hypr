@@ -1,0 +1,66 @@
+# archminimal · Ghostty
+# Same palette as the bar, launcher and login screen.
+
+font-family = JetBrains Mono
+font-size = 11
+# no ligatures: what you type is what you see
+font-feature = -calt
+
+# ---- colors ----
+# 18191d
+background =
+# d0d2d0
+foreground =
+# 00e5ff
+cursor-color =
+# 18191d
+cursor-text =
+# 00e5ff
+selection-background =
+# 000000
+selection-foreground =
+
+palette = 0=#28292d
+palette = 1=#ff2a6d
+palette = 2=#9ece6a
+palette = 3=#e0af68
+palette = 4=#5ab0f6
+palette = 5=#b48ef7
+palette = 6=#00e5ff
+palette = 7=#d0d2d0
+palette = 8=#4a4c54
+palette = 9=#ff5c8a
+palette = 10=#b5e08a
+palette = 11=#f0c88a
+palette = 12=#8ccaff
+palette = 13=#cdb1ff
+palette = 14=#7af2ff
+palette = 15=#f2f3f2
+
+# a hint of the wallpaper; Hyprland blur stays off
+background-opacity = 0.96
+
+# ---- window ----
+# Hyprland draws the 1px cyan border
+window-decoration = none
+window-padding-x = 14
+window-padding-y = 12
+window-padding-balance = true
+# one process for all windows: faster, lighter
+gtk-single-instance = true
+resize-overlay = never
+confirm-close-surface = false
+
+# ---- cursor & input ----
+cursor-style = block
+cursor-style-blink = true
+shell-integration-features = no-cursor,sudo,title
+mouse-hide-while-typing = true
+copy-on-select = clipboard
+
+# ---- keys (ctrl+shift+c/v copy/paste are built in) ----
+keybind = ctrl+shift+t=new_tab
+keybind = ctrl+shift+enter=new_split:auto
+keybind = ctrl+plus=increase_font_size:1
+keybind = ctrl+minus=decrease_font_size:1
+keybind = ctrl+zero=reset_font_size
