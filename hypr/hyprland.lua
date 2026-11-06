@@ -145,6 +145,7 @@ bind(mod .. " + SHIFT + E",   run(qs .. " launcher power"))
 bind(mod .. " + SHIFT + B",   run(qs .. " bar toggle"))
 bind(mod .. " + E",           run(files))
 bind(mod .. " + Escape",      run("loginctl lock-session"))
+bind(mod .. " + L",           hl.dsp.exit())                 -- log out of Hyprland
 
 -- windows
 bind(mod .. " + Q", hl.dsp.window.close())
@@ -153,10 +154,13 @@ bind(mod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 bind(mod .. " + P", hl.dsp.window.pseudo())
 bind(mod .. " + SHIFT + T", hl.dsp.layout("togglesplit"))
 
--- focus / move / resize: vim keys (and arrows for focus)
+-- focus / move / resize: vim keys (and arrows for focus).
+-- Super+L is log out, so focus-right is arrow-only; Shift/Ctrl+L still work.
 local dirs = { H = "left", J = "down", K = "up", L = "right" }
 for key, dir in pairs(dirs) do
-    bind(mod .. " + " .. key,           hl.dsp.focus({ direction = dir }))
+    if key ~= "L" then
+        bind(mod .. " + " .. key,       hl.dsp.focus({ direction = dir }))
+    end
     bind(mod .. " + SHIFT + " .. key,   hl.dsp.window.move({ direction = dir }))
 end
 for _, dir in ipairs({ "left", "right", "up", "down" }) do

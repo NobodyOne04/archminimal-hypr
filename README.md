@@ -65,12 +65,13 @@ It also creates `~/.config/hypr/local.lua` for per-machine settings (not tracked
 | `Super + F` / `Super + Space` / `Super + D` | launcher (pick an app) |
 | `Super + Shift + E` | power menu (lock, suspend, log out, reboot, shut down) |
 | `Super + Escape` | lock |
+| `Super + L` | log out (leave Hyprland) |
 | `Super + E` | files (yazi in kitty) |
 | `Super + Shift + B` | hide/show the bar |
 | `Super + Q` | close window |
 | `Super + Shift + F` | fullscreen |
 | `Super + V` / `P` / `Shift + T` | float / pseudo-tile / toggle split |
-| `Super + H J K L` or arrows | focus |
+| `Super + H J K` or arrows | focus (`L` is log out; use `→`) |
 | `Super + Shift + H J K L` | move window |
 | `Super + Ctrl + H J K L` | resize (hold) |
 | `Super + 1…9` / `Super + Shift + 1…9` | go to / move window to workspace |
