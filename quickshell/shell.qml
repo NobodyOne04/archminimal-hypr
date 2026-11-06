@@ -5,6 +5,7 @@
 //   qs -c archminimal ipc call launcher toggle
 //   qs -c archminimal ipc call launcher power
 //   qs -c archminimal ipc call bar toggle
+//   qs -c archminimal ipc call lock lock      (hypridle, Super+Escape)
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -25,6 +26,8 @@ ShellRoot {
     }
 
     Launcher {}
+
+    Lock {}
 
     IpcHandler {
         target: "launcher"
