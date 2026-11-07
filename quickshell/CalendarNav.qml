@@ -1,4 +1,4 @@
-// Arrow button in the calendar header: ‹ › move a month, « » move a year.
+// Arrow button in the calendar header: ‹ › move a month.
 import QtQuick
 
 Text {
@@ -6,7 +6,7 @@ Text {
     signal clicked()
 
     color: ma.containsMouse ? Theme.accent : Theme.mute
-    font { family: Theme.font; pixelSize: 28 }
+    font { family: Theme.font; pixelSize: 16 }
 
     MouseArea {
         id: ma

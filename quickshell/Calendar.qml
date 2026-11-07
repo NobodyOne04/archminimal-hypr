@@ -1,6 +1,6 @@
 // Month calendar popup, opened by clicking the clock in the bar.
-// ‹ › / scroll change the month, « » / shift+scroll change the year, clicking the title jumps back to today,
-// clicking anywhere else (or Esc) closes it.
+// ‹ › / scroll / ←→ change the month, shift+scroll / ↑↓ change the year, clicking the title jumps back
+// to today, clicking anywhere else (or Esc) closes it.
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
@@ -11,8 +11,9 @@ PopupWindow {
     required property var barWindow
     required property Item anchorItem
 
-    readonly property int cell: 64               // size of one day square
-    readonly property int pad: 28
+    readonly property int cell: 40               // day column width
+    readonly property int rowH: 30               // day row height (landscape grid, not squares)
+    readonly property int pad: 20
     property date today: new Date()
     property int year: today.getFullYear()
     property int month: today.getMonth()          // 0..11
@@ -24,6 +25,16 @@ PopupWindow {
         visible = true
     }
     function toggle() { if (visible) visible = false; else open() }
+    // ISO-8601 week number
+    function isoWeek(d) {
+        const t = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+        t.setDate(t.getDate() + 3 - (t.getDay() + 6) % 7)      // thursday of this week
+        const jan4 = new Date(t.getFullYear(), 0, 4)
+        return 1 + Math.round(((t - jan4) / 86400000 - 3 + (jan4.getDay() + 6) % 7) / 7)
+    }
+    function dayOfYear(d) {
+        return Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - new Date(d.getFullYear(), 0, 1)) / 86400000) + 1
+    }
     function shift(n) {
         const d = new Date(year, month + n, 1)
         year = d.getFullYear()
@@ -36,8 +47,8 @@ PopupWindow {
     // the clock is centred in the bar, so centre the popup on the bar
     anchor.rect.x: Math.round(barWindow.width / 2 - implicitWidth / 2)
     anchor.rect.y: Theme.barHeight + 8
-    implicitWidth: 7 * cell + 2 * pad
-    implicitHeight: body.implicitHeight + 2 * pad
+    implicitWidth: layout.implicitWidth + 2 * pad
+    implicitHeight: layout.implicitHeight + 2 * pad
 
     // close on any click outside the popup and the bar
     HyprlandFocusGrab {
@@ -49,7 +60,7 @@ PopupWindow {
     Rectangle {
         anchors.fill: parent
         color: Theme.panel
-        border { width: 1; color: "#2600e5ff" }
+        border { width: 1; color: "#2e00e5ff" }   // same edge as launcher / notifications
         focus: true
         Keys.onEscapePressed: cal.visible = false
         Keys.onLeftPressed: cal.shift(-1)
@@ -66,47 +77,89 @@ PopupWindow {
             }
         }
 
-        Column {
+        Row {
+          id: layout
+          x: cal.pad; y: cal.pad
+          spacing: 22
+
+          // ---- left: today, big ----
+          Item {
+            // as wide as its widest line, so nothing spills over the divider
+            width: Math.max(112, info.implicitWidth, footer.implicitWidth)
+            height: body.height
+
+            Column {
+                id: info
+                anchors { left: parent.left; top: parent.top; topMargin: 4 }
+                spacing: 6
+                Text {
+                    text: Qt.formatDate(cal.today, "dddd").toUpperCase()
+                    color: Theme.accent
+                    font { family: Theme.font; pixelSize: 10; letterSpacing: 3 }
+                }
+                Text {
+                    text: Qt.formatDate(cal.today, "dd")
+                    color: Theme.fg
+                    font { family: Theme.font; pixelSize: 56; weight: Font.Light }
+                }
+                Text {
+                    text: Qt.formatDate(cal.today, "MMMM yyyy").toUpperCase()
+                    color: Theme.mute
+                    font { family: Theme.font; pixelSize: 11; letterSpacing: 2 }
+                }
+            }
+            Text {
+                id: footer
+                anchors { left: parent.left; bottom: parent.bottom; bottomMargin: 4 }
+                text: "WEEK " + cal.isoWeek(cal.today) + " · DAY " + cal.dayOfYear(cal.today)
+                color: Theme.dim
+                font { family: Theme.font; pixelSize: 10; letterSpacing: 2 }
+            }
+          }
+
+          Rectangle { width: 1; height: body.height; color: Theme.line }
+
+          // ---- right: month grid ----
+          Column {
             id: body
-            x: cal.pad; y: cal.pad
-            spacing: 14
+            width: 7 * cal.cell
 
-            // ---- header: «  ‹   NOVEMBER 2026   ›  » ----
+            // ---- header:  ‹   NOVEMBER 2026   › ----
             Item {
-                width: 7 * cal.cell
-                height: 36
+                width: parent.width
+                height: 24
 
-                Row {
-                    anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-                    spacing: 22
-                    CalendarNav { text: "«"; onClicked: cal.shift(-12) }
-                    CalendarNav { text: "‹"; onClicked: cal.shift(-1) }
+                CalendarNav {
+                    anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
+                    text: "‹"
+                    onClicked: cal.shift(-1)
                 }
                 Text {
                     anchors.centerIn: parent
                     text: Qt.formatDate(new Date(cal.year, cal.month, 1), "MMMM yyyy").toUpperCase()
                     color: titleMa.containsMouse ? Theme.accent : Theme.fg
-                    font { family: Theme.font; pixelSize: 18; letterSpacing: 4 }
+                    font { family: Theme.font; pixelSize: 12; letterSpacing: 3 }
                     MouseArea {
                         id: titleMa
-                        anchors.fill: parent; anchors.margins: -4
+                        anchors.fill: parent; anchors.margins: -6
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: cal.open()          // back to this month
                     }
                 }
-                Row {
-                    anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                    spacing: 22
-                    CalendarNav { text: "›"; onClicked: cal.shift(1) }
-                    CalendarNav { text: "»"; onClicked: cal.shift(12) }
+                CalendarNav {
+                    anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                    text: "›"
+                    onClicked: cal.shift(1)
                 }
             }
+
+            Item { width: 1; height: 16 }
 
             // ---- weekday names (week starts on Monday) ----
             Row {
                 Repeater {
-                    model: ["mo", "tu", "we", "th", "fr", "sa", "su"]
+                    model: ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
                     Text {
                         required property string modelData
                         required property int index
@@ -114,12 +167,12 @@ PopupWindow {
                         horizontalAlignment: Text.AlignHCenter
                         text: modelData
                         color: index >= 5 ? Theme.dim : Theme.mute
-                        font { family: Theme.font; pixelSize: 13; letterSpacing: 2 }
+                        font { family: Theme.font; pixelSize: 10; letterSpacing: 2 }
                     }
                 }
             }
 
-            Rectangle { width: 7 * cal.cell; height: 1; color: Theme.line }
+            Item { width: 1; height: 6 }
 
             // ---- days: always 6 weeks so the popup keeps its size ----
             Grid {
@@ -140,26 +193,29 @@ PopupWindow {
                         readonly property bool weekend: index % 7 >= 5
 
                         width: cal.cell
-                        height: cal.cell - 10
+                        height: cal.rowH
+
+                        HoverHandler { id: hover }
 
                         Rectangle {
                             anchors.centerIn: parent
-                            width: cal.cell - 10; height: cal.cell - 14
-                            visible: day.isToday
-                            color: "transparent"
-                            border { width: 1; color: Theme.accent }
+                            width: cal.cell - 6; height: cal.rowH - 6
+                            color: day.isToday ? Theme.accent : Theme.line
+                            opacity: day.isToday ? 1 : hover.hovered ? 0.6 : 0
+                            Behavior on opacity { NumberAnimation { duration: 90 } }
                         }
                         Text {
                             anchors.centerIn: parent
                             text: day.date.getDate()
-                            color: day.isToday ? Theme.accent
-                                 : !day.inMonth ? Theme.line
+                            color: day.isToday ? Theme.panel
+                                 : !day.inMonth ? Theme.dim
                                  : day.weekend ? Theme.mute : Theme.fg
-                            font { family: Theme.font; pixelSize: 14 }
+                            font { family: Theme.font; pixelSize: 13; weight: day.isToday ? Font.Bold : Font.Normal }
                         }
                     }
                 }
             }
+          }
         }
     }
 }
