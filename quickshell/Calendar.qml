@@ -1,11 +1,13 @@
 // Month calendar popup, opened by clicking the clock in the bar.
+// Built like the launcher: a transparent full-screen overlay holding the card, so it gets mouse and
+// keyboard input reliably (an xdg PopupWindow + HyprlandFocusGrab swallowed every click here).
 // ‹ › / scroll / ←→ change the month, shift+scroll / ↑↓ change the year, clicking the title jumps back
 // to today, clicking anywhere else (or Esc) closes it.
 import QtQuick
 import Quickshell
-import Quickshell.Hyprland
+import Quickshell.Wayland
 
-PopupWindow {
+PanelWindow {
     id: cal
 
     required property var barWindow
@@ -42,23 +44,27 @@ PopupWindow {
     }
 
     visible: false
+    screen: barWindow.screen
+    anchors { top: true; bottom: true; left: true; right: true }
+    exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    anchor.window: barWindow
-    // the clock is centred in the bar, so centre the popup on the bar
-    anchor.rect.x: Math.round(barWindow.width / 2 - implicitWidth / 2)
-    anchor.rect.y: Theme.barHeight + 8
-    implicitWidth: layout.implicitWidth + 2 * pad
-    implicitHeight: layout.implicitHeight + 2 * pad
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.namespace: "archminimal-calendar"
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
-    // close on any click outside the popup and the bar
-    HyprlandFocusGrab {
-        active: cal.visible
-        windows: [cal, cal.barWindow]
-        onCleared: cal.visible = false
+    // click anywhere outside the card (the bar's clock included) closes it
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.AllButtons
+        onClicked: cal.visible = false
     }
 
     Rectangle {
-        anchors.fill: parent
+        // the clock is centred in the bar, so centre the card under it
+        x: Math.round(parent.width / 2 - width / 2)
+        y: Theme.barHeight + 8
+        width: layout.implicitWidth + 2 * cal.pad
+        height: layout.implicitHeight + 2 * cal.pad
         color: Theme.panel
         border { width: 1; color: "#2e00e5ff" }   // same edge as launcher / notifications
         focus: true
@@ -67,6 +73,9 @@ PopupWindow {
         Keys.onRightPressed: cal.shift(1)
         Keys.onUpPressed: cal.shift(-12)
         Keys.onDownPressed: cal.shift(12)
+
+        // eat clicks on the card's empty areas so they don't reach the backdrop and close it
+        MouseArea { anchors.fill: parent; acceptedButtons: Qt.AllButtons }
 
         WheelHandler {
             // scroll = month, shift+scroll = year
@@ -90,27 +99,38 @@ PopupWindow {
 
             Column {
                 id: info
-                anchors { left: parent.left; top: parent.top; topMargin: 4 }
-                spacing: 6
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    verticalCenter: parent.verticalCenter
+                    verticalCenterOffset: -footer.height / 2
+                }
+                spacing: 4
+                // letterSpacing also pads after the last glyph; leftPadding = letterSpacing evens it out
                 Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
                     text: Qt.formatDate(cal.today, "dddd").toUpperCase()
                     color: Theme.accent
+                    leftPadding: 3
                     font { family: Theme.font; pixelSize: 10; letterSpacing: 3 }
                 }
                 Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
                     text: Qt.formatDate(cal.today, "dd")
                     color: Theme.fg
                     font { family: Theme.font; pixelSize: 56; weight: Font.Light }
                 }
                 Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
                     text: Qt.formatDate(cal.today, "MMMM yyyy").toUpperCase()
                     color: Theme.mute
+                    leftPadding: 2
                     font { family: Theme.font; pixelSize: 11; letterSpacing: 2 }
                 }
             }
             Text {
                 id: footer
-                anchors { left: parent.left; bottom: parent.bottom; bottomMargin: 4 }
+                anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 4 }
+                leftPadding: 2
                 text: "WEEK " + cal.isoWeek(cal.today) + " · DAY " + cal.dayOfYear(cal.today)
                 color: Theme.dim
                 font { family: Theme.font; pixelSize: 10; letterSpacing: 2 }
@@ -138,6 +158,7 @@ PopupWindow {
                     anchors.centerIn: parent
                     text: Qt.formatDate(new Date(cal.year, cal.month, 1), "MMMM yyyy").toUpperCase()
                     color: titleMa.containsMouse ? Theme.accent : Theme.fg
+                    leftPadding: 3
                     font { family: Theme.font; pixelSize: 12; letterSpacing: 3 }
                     MouseArea {
                         id: titleMa
@@ -166,6 +187,7 @@ PopupWindow {
                         width: cal.cell
                         horizontalAlignment: Text.AlignHCenter
                         text: modelData
+                        leftPadding: 2
                         color: index >= 5 ? Theme.dim : Theme.mute
                         font { family: Theme.font; pixelSize: 10; letterSpacing: 2 }
                     }
