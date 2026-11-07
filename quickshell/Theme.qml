@@ -29,6 +29,13 @@ Singleton {
     readonly property string showKeyboard: "auto"       // auto (2+ layouts) | always | never
     readonly property int statsInterval: 2              // seconds
 
+    // ---- notifications ----
+    readonly property int notifyTimeout: 6              // seconds, unless the app asks otherwise
+    readonly property int notifyMax: 4                  // popups on screen at once; oldest goes first
+
+    // ---- night light (hyprsunset; schedule in hypr/hyprsunset.conf) ----
+    readonly property int nightTemp: 4000               // kelvin used by the bar toggle
+
     // ---- thresholds that turn a value red ----
     readonly property int cpuHot: 85
     readonly property int memHot: 85

@@ -9,7 +9,10 @@ A minimal, lightweight Hyprland desktop for Arch Linux in the same style as the
 - **kitty**: matching palette, quiet tab bar, works on modest (VM) graphics.
 - **Lock & idle**: hyprlock in the login screen's layout; hypridle dims, locks, turns the screen off and
   suspends.
-- **No notification daemon or notification center**, by design.
+- **Notifications**: popups in the same style, drawn by the shell itself (no mako/dunst). Do not disturb on a
+  key. No history panel, by design.
+- **Clipboard history** (`Super + V`), **screenshot annotation** with satty, **night light** with hyprsunset,
+  and a **key cheat sheet** (`Super + /`) read live from Hyprland.
 
 Open [`preview/index.html`](preview/index.html) (`make preview`) for an interactive mock-up of the whole
 desktop.
@@ -23,10 +26,10 @@ desktop.
 
 | Piece | What runs |
 |---|---|
-| Bar + launcher + wallpaper | one Quickshell process (QML); the launcher window exists only while open |
+| Bar + launcher + wallpaper + notifications | one Quickshell process (QML); launcher, key list and popups exist only while shown |
 | System stats | one long-lived `awk` reading `/proc` and `/sys` every 2 s; no per-tick process spawning |
 | GPU stats | auto-detected; NVIDIA is queried only while the dGPU is awake, so it is never woken up just to be measured |
-| Compositor | no blur, no shadows, short animations |
+| Compositor | no blur, one soft shadow, short animations |
 | Terminal | kitty: GPU-rendered but only needs OpenGL 3.3, so it also runs in VMs |
 
 `make memory` shows what it actually uses on your machine.
@@ -47,7 +50,7 @@ Then log in to Hyprland (from the [archminimal greeter](../sddm-login/greetd) or
 
 | Link | From |
 |---|---|
-| `~/.config/hypr/hyprland.lua`, `hyprlock.conf`, `hypridle.conf` | `hypr/` |
+| `~/.config/hypr/hyprland.lua`, `hyprlock.conf`, `hypridle.conf`, `hyprsunset.conf` | `hypr/` |
 | `~/.config/quickshell/archminimal` | `quickshell/` |
 | `~/.config/kitty/kitty.conf` | `kitty/kitty.conf` |
 | `~/.config/fastfetch/config.jsonc` | `fastfetch/config.jsonc` |
@@ -63,13 +66,17 @@ It also creates `~/.config/hypr/local.lua` for per-machine settings (not tracked
 | `Super + T` / `Super + Return` | kitty |
 | `Super + B` | Firefox |
 | `Super + F` / `Super + Space` / `Super + D` | launcher (pick an app) |
+| `Super + /` | this key list, on screen |
+| `Super + V` | clipboard history |
 | `Super + Shift + E` | power menu (lock, suspend, log out, reboot, shut down) |
 | `Super + Escape` / `Super + L` | lock (apps stay open) |
 | `Super + E` | files (yazi in kitty) |
 | `Super + Shift + B` | hide/show the bar |
+| `Super + N` / `Super + Shift + N` | dismiss notifications / do not disturb |
+| `Super + Shift + W` | night light on/off |
 | `Super + Q` | close window |
 | `Super + Shift + F` | fullscreen |
-| `Super + V` / `P` / `Shift + T` | float / pseudo-tile / toggle split |
+| `Super + Shift + V` / `P` / `Shift + T` | float / pseudo-tile / toggle split |
 | `Super + H J K` or arrows | focus (`L` is lock; use `→`) |
 | `Super + Shift + H J K L` | move window |
 | `Super + Ctrl + H J K L` | resize (hold) |
@@ -77,6 +84,7 @@ It also creates `~/.config/hypr/local.lua` for per-machine settings (not tracked
 | `Super + Tab` | previous workspace |
 | `Super + drag` (left / right button) | move / resize with the mouse |
 | `Print` / `Shift + Print` / `Super + Print` | region → clipboard / full screen → file / region → file |
+| `Super + Shift + S` | region → satty (draw, arrows, blur; save or copy) |
 | media, volume, brightness keys | work everywhere, also while locked |
 | three-finger swipe | switch workspace |
 
@@ -95,6 +103,8 @@ It also creates `~/.config/hypr/local.lua` for per-machine settings (not tracked
 | `net` | download rate | interface, Wi-Fi name and signal, up/down | nmtui (or impala) |
 | `bt` | off / on / connected device | devices and their battery | bluetui · right-click: power on/off |
 | `kb` | layout (only with 2+ layouts) | | next layout |
+| `nl` | night light: `off` or the warmth (`4000k`) | schedule | on / off |
+| `dnd` | only while do not disturb is on | | turn it off |
 | `vol` | volume / `mute` | output, mic | mute · scroll: ±5 % · right-click: mixer |
 | `bat` | charge (`↑` when charging) | status, time left, power draw, profile | next power profile |
 | `⏻` | | | power menu |
@@ -120,6 +130,12 @@ outside closes. If nothing matches, `Enter` runs what you typed as a command in 
   A syntax error there is reported by Hyprland with the file and line; it is never silently ignored.
 - **Wallpaper**: replace `assets/wallpaper.png` (used by the desktop and the lock screen).
 - **Idle timings**: `hypr/hypridle.conf` (dim 4 min, lock 5 min, screen off 5.5 min, suspend 15 min).
+- **Night light schedule**: `hypr/hyprsunset.conf` (4000 K from 21:00, neutral from 07:00).
+- **Notifications**: `notifyTimeout` and `notifyMax` in `Theme.qml`.
+- **Key list**: it shows every bind with a `"group: what"` description in `hyprland.lua`; give a new bind one
+  and it appears under that group.
+- **Shadows / rounding**: on a weak GPU or a VM, turn them off in `local.lua`:
+  `hl.config({ decoration = { rounding = 0, shadow = { enabled = false } } })`.
 
 ## Makefile
 
@@ -141,8 +157,13 @@ outside closes. If nothing matches, `Enter` runs what you typed as a command in 
 - **Odd glyphs in the bar**: install `ttf-jetbrains-mono-nerd` (`make check` tells you).
 - **GPU module missing or wrong**: set `gpu` in `Theme.qml` to `amd`, `intel`, `nvidia` or `none`.
 - **Wi-Fi name not shown**: install `iw`.
-- **Apps send notifications into the void**: intended. Install `mako` and add
-  `hl.exec_cmd("mako")` to the start handler if you change your mind.
+- **No notifications**: only one daemon can own them; quit mako/dunst/swaync if one is running, then
+  `make restart-shell`. Test with `notify-send hello world`.
+- **Clipboard history empty**: needs `cliphist`; it records from the next login (or start the two
+  `wl-paste --watch cliphist store` lines from `hyprland.lua` by hand). Anything you copy is kept on disk,
+  passwords included: `cliphist wipe` clears it.
+- **Night light does nothing / `nl` missing**: needs `hyprsunset` running, and a GPU driver with gamma
+  control (some VMs have none).
 
 ## Files
 
@@ -152,12 +173,16 @@ archminimal-hypr/
 │   ├── hyprland.lua          Hyprland (Lua, 0.57+)
 │   ├── local.lua.example     per-machine template → ~/.config/hypr/local.lua
 │   ├── hyprlock.conf         lock screen
-│   └── hypridle.conf         idle: dim, lock, screen off, suspend
+│   ├── hypridle.conf         idle: dim, lock, screen off, suspend
+│   └── hyprsunset.conf       night light schedule
 ├── quickshell/               bar, launcher, wallpaper (qs -c archminimal)
-│   ├── shell.qml             entry point + IPC (launcher toggle/power, bar toggle)
+│   ├── shell.qml             entry point + IPC
 │   ├── Theme.qml             all settings
 │   ├── Bar.qml  Module.qml  Kv.qml  Workspaces.qml
-│   ├── Launcher.qml  LauncherState.qml
+│   ├── Launcher.qml  LauncherState.qml   apps, power menu, clipboard history
+│   ├── Notifications.qml  NotifyState.qml   notification popups, do not disturb
+│   ├── Cheatsheet.qml        Super + / key list
+│   ├── NightLight.qml        hyprsunset toggle
 │   ├── Stats.qml  Keyboard.qml  Wallpaper.qml
 │   └── scripts/stats.sh, stats.awk   system stats collector
 ├── kitty/kitty.conf

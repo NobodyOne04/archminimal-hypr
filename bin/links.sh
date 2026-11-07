@@ -16,6 +16,7 @@ LINKS="
 hypr/hyprland.lua       $CONF/hypr/hyprland.lua
 hypr/hyprlock.conf      $CONF/hypr/hyprlock.conf
 hypr/hypridle.conf      $CONF/hypr/hypridle.conf
+hypr/hyprsunset.conf    $CONF/hypr/hyprsunset.conf
 quickshell              $CONF/quickshell/archminimal
 kitty/kitty.conf        $CONF/kitty/kitty.conf
 fastfetch/config.jsonc  $CONF/fastfetch/config.jsonc

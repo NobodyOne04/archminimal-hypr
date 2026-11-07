@@ -261,6 +261,36 @@ PanelWindow {
             onClicked: Keyboard.next()
         }
 
+        // ---- night light (hidden when hyprsunset is not running) ----
+        Module {
+            barWindow: bar
+            visible: NightLight.available
+            label: "nl"
+            value: NightLight.on ? NightLight.temperature + "k" : "off"
+            accent: NightLight.on
+            clickable: true
+            onClicked: NightLight.toggle()
+            tip: Component {
+                Column {
+                    spacing: 2
+                    Kv { k: "night light"; v: NightLight.on ? "on · " + NightLight.temperature + " K" : "off" }
+                    Kv { k: "schedule"; v: "hypr/hyprsunset.conf"; vColor: Theme.dim }
+                    Kv { k: "click"; v: "on / off"; vColor: Theme.dim }
+                }
+            }
+        }
+
+        // ---- do not disturb (only shown while on) ----
+        Module {
+            barWindow: bar
+            visible: NotifyState.dnd
+            label: "dnd"
+            value: "on"
+            hot: true
+            clickable: true
+            onClicked: NotifyState.dnd = false
+        }
+
         // ---- volume ----
         Module {
             id: volMod

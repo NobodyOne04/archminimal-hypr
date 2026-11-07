@@ -8,7 +8,7 @@ Singleton {
     id: state
 
     property bool open: false
-    property string mode: "apps"        // apps | power
+    property string mode: "apps"        // apps | power | clip
     property var counts: ({})
 
     function toggle(m) {

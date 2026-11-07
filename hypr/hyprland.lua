@@ -35,6 +35,9 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("qs -c archminimal")                       -- bar, launcher, wallpaper
     hl.exec_cmd("hypridle")                                -- dim, lock, suspend
     hl.exec_cmd("systemctl --user start hyprpolkitagent")  -- password prompts for apps
+    hl.exec_cmd("hyprsunset")                              -- night light (hyprsunset.conf)
+    hl.exec_cmd("wl-paste --type text --watch cliphist store")   -- clipboard history
+    hl.exec_cmd("wl-paste --type image --watch cliphist store")
 end)
 
 ---------------
@@ -77,11 +80,19 @@ hl.config({
     },
 
     decoration = {
-        rounding         = 0,
+        rounding         = 6,
+        rounding_power   = 2,
         active_opacity   = 1.0,
         inactive_opacity = 1.0,
-        blur   = { enabled = false },   -- light: no blur passes
-        shadow = { enabled = false },
+        blur   = { enabled = false },   -- still no blur: the costly one
+        shadow = {                      -- soft, low and dark; turn off in local.lua on weak GPUs
+            enabled      = true,
+            range        = 14,
+            render_power = 3,
+            offset       = { 0, 4 },
+            color          = "rgba(00000066)",
+            color_inactive = "rgba(00000033)",
+        },
     },
 
     animations = { enabled = true },
@@ -94,6 +105,9 @@ hl.config({
         force_default_wallpaper  = 0,
         background_color         = "rgb(28292d)",
         focus_on_activate        = true,
+        -- if the lock screen (quickshell) dies, a restarted one may take the
+        -- lock over again; without this Hyprland rejects it and kills it
+        allow_session_lock_restore = true,
     },
 
     cursor = { inactive_timeout = 5 },
@@ -118,6 +132,15 @@ hl.window_rule({
     suppress_event = "maximize",
 })
 
+-- satty (screenshot editor) opens as a centred floating window
+hl.window_rule({
+    name  = "float-satty",
+    match = { class = "^(com\\.gabm\\.satty)$" },
+    float = true,
+    size  = "monitor_w*0.7 monitor_h*0.7",
+    center = true,
+})
+
 -- short, snappy animations; no border animation
 hl.curve("snap", { type = "bezier", points = { {0.2, 0.9}, {0.1, 1.0} } })
 hl.animation({ leaf = "global",     enabled = true,  speed = 2,   bezier = "snap" })
@@ -130,80 +153,103 @@ hl.animation({ leaf = "border",     enabled = false })
 ---------------------
 ---- KEYBINDINGS ----
 ---------------------
+-- Every bind carries a "group: what it does" description; Super + / shows
+-- them all (quickshell/Cheatsheet.qml reads `hyprctl binds -j`). Binds that
+-- share a description are merged there, e.g. Super + 1…9.
 
-local function bind(keys, dsp, opts) hl.bind(keys, dsp, opts) end
+local function bind(keys, desc, dsp, opts)
+    local o = {}
+    for k, v in pairs(opts or {}) do o[k] = v end
+    o.description = desc
+    hl.bind(keys, dsp, o)
+end
 local function run(cmd) return hl.dsp.exec_cmd(cmd) end
 
 -- apps & shell
-bind(mod .. " + Return",      run(terminal))
-bind(mod .. " + T",           run(terminal))
-bind(mod .. " + F",           run(qs .. " launcher toggle"))
-bind(mod .. " + B",           run(browser))
-bind(mod .. " + Space",       run(qs .. " launcher toggle"))
-bind(mod .. " + D",           run(qs .. " launcher toggle"))
-bind(mod .. " + SHIFT + E",   run(qs .. " launcher power"))
-bind(mod .. " + SHIFT + B",   run(qs .. " bar toggle"))
-bind(mod .. " + E",           run(files))
-bind(mod .. " + Escape",      run("loginctl lock-session"))
-bind(mod .. " + L",           run("loginctl lock-session"))  -- lock (apps stay open)
+bind(mod .. " + Return",      "apps: terminal",            run(terminal))
+bind(mod .. " + T",           "apps: terminal",            run(terminal))
+bind(mod .. " + B",           "apps: firefox",             run(browser))
+bind(mod .. " + E",           "apps: files (yazi)",        run(files))
+bind(mod .. " + F",           "apps: launcher",            run(qs .. " launcher toggle"))
+bind(mod .. " + Space",       "apps: launcher",            run(qs .. " launcher toggle"))
+bind(mod .. " + D",           "apps: launcher",            run(qs .. " launcher toggle"))
+bind(mod .. " + V",           "apps: clipboard history",   run(qs .. " launcher clip"))
+bind(mod .. " + slash",       "apps: this key list",       run(qs .. " keys toggle"))
+
+-- session & shell
+bind(mod .. " + Escape",      "session: lock",             run("loginctl lock-session"))
+bind(mod .. " + L",           "session: lock",             run("loginctl lock-session"))
+bind(mod .. " + SHIFT + E",   "session: power menu",       run(qs .. " launcher power"))
+bind(mod .. " + SHIFT + B",   "session: hide / show bar",  run(qs .. " bar toggle"))
+bind(mod .. " + N",           "session: dismiss notifications", run(qs .. " notifications clear"))
+bind(mod .. " + SHIFT + N",   "session: do not disturb",   run(qs .. " notifications dnd"))
+bind(mod .. " + SHIFT + W",   "session: night light",      run(qs .. " night toggle"))
 
 -- windows
-bind(mod .. " + Q", hl.dsp.window.close())
-bind(mod .. " + SHIFT + F", hl.dsp.window.fullscreen())
-bind(mod .. " + V", hl.dsp.window.float({ action = "toggle" }))
-bind(mod .. " + P", hl.dsp.window.pseudo())
-bind(mod .. " + SHIFT + T", hl.dsp.layout("togglesplit"))
+bind(mod .. " + Q",           "windows: close",            hl.dsp.window.close())
+bind(mod .. " + SHIFT + F",   "windows: fullscreen",       hl.dsp.window.fullscreen())
+bind(mod .. " + SHIFT + V",   "windows: float / tile",     hl.dsp.window.float({ action = "toggle" }))
+bind(mod .. " + P",           "windows: pseudo-tile",      hl.dsp.window.pseudo())
+bind(mod .. " + SHIFT + T",   "windows: toggle split",     hl.dsp.layout("togglesplit"))
 
 -- focus / move / resize: vim keys (and arrows for focus).
 -- Super+L is lock, so focus-right is arrow-only; Shift/Ctrl+L still work.
 local dirs = { H = "left", J = "down", K = "up", L = "right" }
-for key, dir in pairs(dirs) do
+for _, key in ipairs({ "H", "J", "K", "L" }) do
+    local dir = dirs[key]
     if key ~= "L" then
-        bind(mod .. " + " .. key,       hl.dsp.focus({ direction = dir }))
+        bind(mod .. " + " .. key,     "focus: move focus",     hl.dsp.focus({ direction = dir }))
     end
-    bind(mod .. " + SHIFT + " .. key,   hl.dsp.window.move({ direction = dir }))
+    bind(mod .. " + SHIFT + " .. key, "windows: move",         hl.dsp.window.move({ direction = dir }))
 end
-for _, dir in ipairs({ "left", "right", "up", "down" }) do
-    bind(mod .. " + " .. dir, hl.dsp.focus({ direction = dir }))
+for _, dir in ipairs({ "left", "down", "up", "right" }) do
+    bind(mod .. " + " .. dir,         "focus: move focus",     hl.dsp.focus({ direction = dir }))
 end
 local step = 40
-bind(mod .. " + CTRL + H", hl.dsp.window.resize({ x = -step, y = 0, relative = true }), { repeating = true })
-bind(mod .. " + CTRL + L", hl.dsp.window.resize({ x = step,  y = 0, relative = true }), { repeating = true })
-bind(mod .. " + CTRL + K", hl.dsp.window.resize({ x = 0, y = -step, relative = true }), { repeating = true })
-bind(mod .. " + CTRL + J", hl.dsp.window.resize({ x = 0, y = step,  relative = true }), { repeating = true })
+local rep = { repeating = true }
+bind(mod .. " + CTRL + H", "windows: resize (hold)", hl.dsp.window.resize({ x = -step, y = 0, relative = true }), rep)
+bind(mod .. " + CTRL + J", "windows: resize (hold)", hl.dsp.window.resize({ x = 0, y = step,  relative = true }), rep)
+bind(mod .. " + CTRL + K", "windows: resize (hold)", hl.dsp.window.resize({ x = 0, y = -step, relative = true }), rep)
+bind(mod .. " + CTRL + L", "windows: resize (hold)", hl.dsp.window.resize({ x = step,  y = 0, relative = true }), rep)
 
 -- mouse: SUPER + left drag moves, SUPER + right drag resizes
-bind(mod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
-bind(mod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+bind(mod .. " + mouse:272", "windows: drag to move",   hl.dsp.window.drag(),   { mouse = true })
+bind(mod .. " + mouse:273", "windows: drag to resize", hl.dsp.window.resize(), { mouse = true })
 
 -- workspaces 1..9 (SHIFT moves the window)
 for i = 1, 9 do
-    bind(mod .. " + " .. i,           hl.dsp.focus({ workspace = i }))
-    bind(mod .. " + SHIFT + " .. i,   hl.dsp.window.move({ workspace = i }))
+    bind(mod .. " + " .. i,           "workspaces: go to",          hl.dsp.focus({ workspace = i }))
+    bind(mod .. " + SHIFT + " .. i,   "workspaces: send window to", hl.dsp.window.move({ workspace = i }))
 end
-bind(mod .. " + Tab",        hl.dsp.focus({ workspace = "previous" }))
-bind(mod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
-bind(mod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }))
+bind(mod .. " + Tab",        "workspaces: previous",      hl.dsp.focus({ workspace = "previous" }))
+bind(mod .. " + mouse_down", "workspaces: next / previous", hl.dsp.focus({ workspace = "e+1" }))
+bind(mod .. " + mouse_up",   "workspaces: next / previous", hl.dsp.focus({ workspace = "e-1" }))
 
--- screenshots (grim + slurp)
-local shots = "mkdir -p ~/Pictures/Screenshots && grim "
-local stamp = "~/Pictures/Screenshots/$(date +%F_%H-%M-%S).png"
-bind("Print",               run('grim -g "$(slurp -d)" - | wl-copy'))
-bind("SHIFT + Print",       run(shots .. stamp))
-bind(mod .. " + Print",     run(shots .. '-g "$(slurp -d)" ' .. stamp))
+-- screenshots (grim + slurp; satty to draw on them)
+local dir   = "~/Pictures/Screenshots"
+local shots = "mkdir -p " .. dir .. " && grim "
+local stamp = dir .. "/$(date +%F_%H-%M-%S).png"
+bind("Print",               "screenshots: region → clipboard",  run('grim -g "$(slurp -d)" - | wl-copy'))
+bind("SHIFT + Print",       "screenshots: screen → file",       run(shots .. stamp))
+bind(mod .. " + Print",     "screenshots: region → file",       run(shots .. '-g "$(slurp -d)" ' .. stamp))
+bind(mod .. " + SHIFT + S", "screenshots: region → annotate",
+     run('mkdir -p ' .. dir .. ' && grim -g "$(slurp -d)" - | satty --filename - '
+         .. '--output-filename ' .. dir .. '/%Y-%m-%d_%H-%M-%S-edit.png '
+         .. '--copy-command wl-copy --early-exit'))
 
 -- laptop keys (work while locked too)
-local held = { locked = true, repeating = true }
-bind("XF86AudioRaiseVolume",  run("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), held)
-bind("XF86AudioLowerVolume",  run("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),      held)
-bind("XF86AudioMute",         run("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),     { locked = true })
-bind("XF86AudioMicMute",      run("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),   { locked = true })
-bind("XF86MonBrightnessUp",   run("brightnessctl -e4 -n2 set 5%+"),                  held)
-bind("XF86MonBrightnessDown", run("brightnessctl -e4 -n2 set 5%-"),                  held)
-bind("XF86AudioPlay",         run("playerctl play-pause"), { locked = true })
-bind("XF86AudioPause",        run("playerctl play-pause"), { locked = true })
-bind("XF86AudioNext",         run("playerctl next"),       { locked = true })
-bind("XF86AudioPrev",         run("playerctl previous"),   { locked = true })
+local held   = { locked = true, repeating = true }
+local locked = { locked = true }
+bind("XF86AudioRaiseVolume",  "media: volume up",        run("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), held)
+bind("XF86AudioLowerVolume",  "media: volume down",      run("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),      held)
+bind("XF86AudioMute",         "media: mute",             run("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),     locked)
+bind("XF86AudioMicMute",      "media: mute mic",         run("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),   locked)
+bind("XF86MonBrightnessUp",   "media: brightness up",    run("brightnessctl -e4 -n2 set 5%+"),                  held)
+bind("XF86MonBrightnessDown", "media: brightness down",  run("brightnessctl -e4 -n2 set 5%-"),                  held)
+bind("XF86AudioPlay",         "media: play / pause",     run("playerctl play-pause"), locked)
+bind("XF86AudioPause",        "media: play / pause",     run("playerctl play-pause"), locked)
+bind("XF86AudioNext",         "media: next track",       run("playerctl next"),       locked)
+bind("XF86AudioPrev",         "media: previous track",   run("playerctl previous"),   locked)
 
 -------------------------------
 ---- PER-MACHINE OVERRIDES ----

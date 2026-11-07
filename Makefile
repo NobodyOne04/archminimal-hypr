@@ -16,7 +16,8 @@ PACKAGES := hyprland hypridle hyprlock hyprpolkitagent xdg-desktop-portal-hyprla
             papirus-icon-theme ttf-jetbrains-mono ttf-jetbrains-mono-nerd \
             pipewire pipewire-pulse wireplumber playerctl brightnessctl \
             upower power-profiles-daemon bluez bluez-utils bluetui iw \
-            grim slurp wl-clipboard btop fastfetch yazi pulsemixer
+            grim slurp wl-clipboard btop fastfetch yazi pulsemixer \
+            cliphist satty hyprsunset libnotify
 
 .PHONY: help deps services check preview install uninstall status reload restart-shell lint logs memory
 
@@ -32,7 +33,7 @@ services: ## Enable bluetooth and power profiles (asks for sudo)
 
 check: ## Verify that the tools, fonts and icon theme are present
 	@ok=1; \
-	for c in Hyprland hyprctl hypridle hyprlock qs kitty grim slurp wl-copy wpctl brightnessctl playerctl btop; do \
+	for c in Hyprland hyprctl hypridle hyprlock hyprsunset qs kitty grim slurp satty wl-copy wl-paste cliphist wpctl brightnessctl playerctl btop; do \
 		if command -v $$c >/dev/null 2>&1; then printf "  ok       %s\n" $$c; else printf "  MISSING  %s\n" $$c; ok=0; fi; \
 	done; \
 	for f in "JetBrains Mono" "JetBrainsMono Nerd Font"; do \
@@ -58,14 +59,16 @@ uninstall: ## Remove the links and restore the backed-up files
 
 status: ## Show which configs are linked and whether the shell is running
 	@bin/links.sh status
-	@if pgrep -f "$(QS)" >/dev/null; then echo "  running  quickshell (archminimal)"; else echo "  stopped  quickshell (archminimal)"; fi
+	@if pgrep -f "^$(QS)$$" >/dev/null; then echo "  running  quickshell (archminimal)"; else echo "  stopped  quickshell (archminimal)"; fi
 
 reload: ## Reload Hyprland and restart the bar/launcher
 	hyprctl reload
 	@$(MAKE) --no-print-directory restart-shell
 
 restart-shell: ## Restart only the quickshell bar/launcher
-	-@pkill -f "$(QS)" && sleep 0.3
+	@if $(QS) ipc call lock isLocked 2>/dev/null | grep -q true; then \
+		echo "the screen is locked by this shell; unlock first (restarting it would drop the lock screen)"; exit 1; fi
+	-@pkill -f "^$(QS)$$" && sleep 0.3
 	hyprctl dispatch 'hl.dsp.exec_cmd("$(QS)")'
 
 lint: ## Static checks: shell scripts, JSON, Hyprland config, QML (when tools exist)

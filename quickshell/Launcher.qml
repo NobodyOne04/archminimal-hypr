@@ -2,8 +2,11 @@
 //   apps:  fuzzy search over installed .desktop apps; most used first.
 //          No match + Enter runs the text as a command in the terminal.
 //   power: lock, suspend, log out, reboot, shut down.
+//   clip:  clipboard history (cliphist), newest first. Enter copies the entry
+//          back to the clipboard; Shift+Delete forgets it.
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
 
@@ -60,8 +63,53 @@ PanelWindow {
         return pts
     }
 
+    // ---------- clipboard history ----------
+    property var clips: []
+
+    // "[[ binary data 48 KiB png 1280x720 ]]" -> "image · png 1280x720 · 48 KiB"
+    function clipEntry(line) {
+        const tab = line.indexOf("\t")
+        if (tab < 0) return null
+        const text = line.slice(tab + 1)
+        const bin = text.match(/^\[\[ binary data (\S+ \S+) (\S+) ?(\S*) \]\]$/)
+        return bin
+            ? { id: "clip:" + line.slice(0, tab), name: "image · " + bin[2] + (bin[3] ? " " + bin[3] : ""), desc: bin[1].toLowerCase(), icon: "image-x-generic", clip: line }
+            : { id: "clip:" + line.slice(0, tab), name: text.replace(/\s+/g, " ").trim().slice(0, 200), desc: "", icon: "edit-paste", clip: line }
+    }
+
+    Process {
+        id: clipList
+        command: ["cliphist", "list"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                win.clips = text.split("\n").map(win.clipEntry).filter(e => e !== null && e.name !== "")
+                win.refresh()
+            }
+        }
+    }
+
+    function loadClips() {
+        clips = []
+        clipList.running = false
+        clipList.running = true
+    }
+
+    function forgetClip() {
+        const item = results[selected]
+        if (!item || !item.clip) return
+        Quickshell.execDetached(["sh", "-c", 'printf "%s\\n" "$1" | cliphist delete', "sh", item.clip])
+        clips = clips.filter(c => c.id !== item.id)
+        refresh()
+    }
+
     function refresh() {
         const q = input.text.trim().toLowerCase()
+        if (LauncherState.mode === "clip") {
+            // keep history order (newest first); just filter
+            results = clips.filter(c => score(c, q) > 0)
+            selected = 0
+            return
+        }
         const pool = LauncherState.mode === "power" ? powerActions : appEntries().concat(powerActions)
         const counts = LauncherState.counts
         results = pool
@@ -77,8 +125,12 @@ PanelWindow {
         const item = results[selected]
         const q = input.text.trim()
         LauncherState.close()
+        if (item && item.clip) {
+            Quickshell.execDetached(["sh", "-c", 'printf "%s\\n" "$1" | cliphist decode | wl-copy', "sh", item.clip])
+            return
+        }
         if (!item) {
-            if (q !== "")
+            if (q !== "" && LauncherState.mode !== "clip")
                 Quickshell.execDetached([Theme.terminal, "-e", "sh", "-c", q + "; exec \"${SHELL:-sh}\""])
             return
         }
@@ -95,12 +147,18 @@ PanelWindow {
     onVisibleChanged: {
         if (!visible) return
         input.text = ""
+        if (LauncherState.mode === "clip") loadClips()
         refresh()
         input.forceActiveFocus()
     }
     Connections {
         target: LauncherState
-        function onModeChanged() { if (win.visible) win.refresh() }
+        function onModeChanged() {
+            if (!win.visible) return
+            input.text = ""
+            if (LauncherState.mode === "clip") win.loadClips()
+            win.refresh()
+        }
     }
 
     // ---------- scrim: click outside closes ----------
@@ -181,6 +239,8 @@ PanelWindow {
                             win.selected = Math.min(win.selected + 1, win.results.length - 1)
                         else if (event.key === Qt.Key_Up || (ctrl && (event.key === Qt.Key_K || event.key === Qt.Key_P)))
                             win.selected = Math.max(win.selected - 1, 0)
+                        else if (event.key === Qt.Key_Delete && (event.modifiers & Qt.ShiftModifier))
+                            win.forgetClip()
                         else if (event.key === Qt.Key_Tab) {
                             if (win.results[win.selected]) input.text = win.results[win.selected].name.toLowerCase()
                         } else return
@@ -190,7 +250,7 @@ PanelWindow {
                         visible: input.text === ""
                         anchors.verticalCenter: parent.verticalCenter
                         x: 14
-                        text: LauncherState.mode === "power" ? "power" : "search"
+                        text: LauncherState.mode === "power" ? "power" : LauncherState.mode === "clip" ? "clipboard" : "search"
                         color: Theme.mute
                         font { family: Theme.font; pixelSize: 17; letterSpacing: 2 }
                     }
@@ -198,7 +258,7 @@ PanelWindow {
                 Text {
                     id: hint
                     anchors { right: parent.right; rightMargin: 22; verticalCenter: parent.verticalCenter }
-                    text: LauncherState.mode === "power" ? "sys::power" : "sys::run"
+                    text: LauncherState.mode === "power" ? "sys::power" : LauncherState.mode === "clip" ? "sys::clip" : "sys::run"
                     color: Theme.mute
                     font { family: Theme.font; pixelSize: 11; letterSpacing: 2 }
                 }
@@ -280,7 +340,8 @@ PanelWindow {
                 Text {
                     visible: list.count === 0
                     x: 22; y: 22
-                    text: input.text === "" ? "nothing here" : "no match · ⏎ runs \"" + input.text + "\" in " + Theme.terminal
+                    text: LauncherState.mode === "clip" ? (input.text === "" ? "clipboard history is empty" : "no match")
+                        : input.text === "" ? "nothing here" : "no match · ⏎ runs \"" + input.text + "\" in " + Theme.terminal
                     color: Theme.mute
                     font { family: Theme.font; pixelSize: 12; letterSpacing: 2 }
                 }
@@ -296,7 +357,9 @@ PanelWindow {
                     anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
                     spacing: 22
                     Repeater {
-                        model: [["↑↓", "select"], ["⏎", "run"], ["tab", "complete"], ["esc", "close"]]
+                        model: LauncherState.mode === "clip"
+                            ? [["↑↓", "select"], ["⏎", "copy"], ["⇧del", "forget"], ["esc", "close"]]
+                            : [["↑↓", "select"], ["⏎", "run"], ["tab", "complete"], ["esc", "close"]]
                         Row {
                             required property var modelData
                             spacing: 6
