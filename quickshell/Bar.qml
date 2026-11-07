@@ -67,12 +67,13 @@ PanelWindow {
     SystemClock { id: clock; precision: SystemClock.Minutes }
 
     Row {
+        id: clockRow
         anchors.centerIn: parent
         spacing: 12
         Text {
             anchors.verticalCenter: parent.verticalCenter
             text: Qt.formatDateTime(clock.date, "HH:mm")
-            color: Theme.fg
+            color: clockMa.containsMouse || calendar.visible ? Theme.accent : Theme.fg
             font { family: Theme.font; pixelSize: 12; letterSpacing: 3 }
         }
         Text {
@@ -81,6 +82,21 @@ PanelWindow {
             color: Theme.mute
             font { family: Theme.font; pixelSize: 11; letterSpacing: 2 }
         }
+    }
+
+    MouseArea {
+        id: clockMa
+        anchors.fill: clockRow
+        anchors.margins: -6
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: calendar.toggle()
+    }
+
+    Calendar {
+        id: calendar
+        barWindow: bar
+        anchorItem: clockRow
     }
 
     // ================= RIGHT =================
