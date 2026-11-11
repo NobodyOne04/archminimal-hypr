@@ -78,8 +78,9 @@ lint: ## Static checks: shell scripts, JSON, Hyprland config, QML (when tools ex
 	@python3 -c 'import json,re; json.loads(re.sub(r"(?m)^\s*//.*$$", "", open("fastfetch/config.jsonc").read()))' && echo "  ok   fastfetch json"
 	@if command -v Hyprland >/dev/null; then Hyprland --verify-config --config hypr/hyprland.lua && echo "  ok   hyprland.lua"; \
 	else echo "  skip hyprland --verify-config (not installed)"; fi
-	@if command -v qmllint6 >/dev/null || command -v qmllint >/dev/null; then \
-		$$(command -v qmllint6 || command -v qmllint) quickshell/*.qml || true; \
+	@# Arch keeps qmllint in /usr/lib/qt6/bin, which isn't on PATH
+	@q=$$(command -v qmllint6 || command -v qmllint || ls /usr/lib/qt6/bin/qmllint 2>/dev/null); \
+	if [ -n "$$q" ]; then $$q quickshell/*.qml || true; echo "  ran  qmllint (warnings above, if any)"; \
 	else echo "  skip qmllint (not installed)"; fi
 
 logs: ## Show the bar/launcher log
