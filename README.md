@@ -1,14 +1,14 @@
 # archminimal-hypr
 
 A minimal, lightweight Hyprland desktop for Arch Linux in the same style as the
-[archminimal login screen](../sddm-login): dark, monospace, one cyan accent, corner marks and a `sys::` voice.
+[archminimal login screen](https://github.com/NobodyOne04/sddm-login): dark, monospace, one cyan accent, corner marks and a `sys::` voice.
 
 - **Bar**: workspaces, window title, clock, then CPU, memory, GPU, temperature, network, Bluetooth, keyboard
   layout, volume, battery with power profile, and a power button. Hover any value for details; click to act.
 - **Launcher**: fuzzy search over your apps with real icons (Papirus-Dark), most-used first, and a power menu.
 - **kitty**: matching palette, quiet tab bar, works on modest (VM) graphics.
-- **Lock & idle**: hyprlock in the login screen's layout; hypridle dims, locks, turns the screen off and
-  suspends.
+- **Lock & idle**: the login screen's look (Quickshell; hyprlock as the fallback), without its reboot /
+  shutdown buttons since your apps are still open; hypridle dims, locks, turns the screen off and suspends.
 - **Notifications**: popups in the same style, drawn by the shell itself (no mako/dunst). Do not disturb on a
   key. No history panel, by design.
 - **Clipboard history** (`Super + V`), **screenshot annotation** with satty, **night light** with hyprsunset,
@@ -19,8 +19,8 @@ desktop.
 
 > Requires **Hyprland 0.57+**, which uses the Lua config format (`hyprland.lua`). Everything here was checked
 > against Arch's current packages: Hyprland 0.57.1 `--verify-config`, Quickshell 0.3.2 type definitions plus
-> `qmllint`, kitty's own config parser, and the stats collector on real Arch `gawk`. It has not yet run on
-> real hardware; report anything odd.
+> `qmllint`, kitty's own config parser, and the stats collector on real Arch `gawk`. It runs daily in an Arch
+> VM; not yet tested on real hardware (GPU, battery and brightness paths). CI runs `make lint` on every PR.
 
 ## Why it is light
 
@@ -37,13 +37,13 @@ desktop.
 ## Install
 
 ```bash
-git clone <this repo> ~/projects/archminimal-hypr && cd ~/projects/archminimal-hypr
+git clone git@github.com:NobodyOne04/hyprland.git ~/projects/hyprland && cd ~/projects/hyprland
 make deps       # pacman packages (all official repos) + enables bluetooth and power-profiles-daemon
 make check      # verifies tools, fonts, icon theme and services
 make install    # symlinks configs into ~/.config; anything already there is backed up
 ```
 
-Then log in to Hyprland (from the [archminimal greeter](../sddm-login/greetd) or any login manager), or run
+Then log in to Hyprland (from the [archminimal greeter](https://github.com/NobodyOne04/sddm-login) or any login manager), or run
 `make reload` if you are already in it.
 
 `make install` links (not copies) the files, so editing this repo changes your desktop directly. It touches:
@@ -147,7 +147,7 @@ outside closes. If nothing matches, `Enter` runs what you typed as a command in 
 | `make install` / `uninstall` | link configs / remove links and restore backups |
 | `make status` | what is linked, whether the shell runs |
 | `make reload` / `restart-shell` | reload Hyprland and the shell / only the shell |
-| `make lint` | shellcheck, JSON, `Hyprland --verify-config`, qmllint (when installed) |
+| `make lint` | shellcheck, JSON, `Hyprland --verify-config`, qmllint (when installed); CI runs it on every PR |
 | `make logs` / `memory` | shell log / memory used by each piece |
 
 ## Troubleshooting
@@ -160,15 +160,16 @@ outside closes. If nothing matches, `Enter` runs what you typed as a command in 
 - **No notifications**: only one daemon can own them; quit mako/dunst/swaync if one is running, then
   `make restart-shell`. Test with `notify-send hello world`.
 - **Clipboard history empty**: needs `cliphist`; it records from the next login (or start the two
-  `wl-paste --watch cliphist store` lines from `hyprland.lua` by hand). Anything you copy is kept on disk,
-  passwords included: `cliphist wipe` clears it.
+  `wl-paste --watch cliphist store` lines from `hyprland.lua` by hand). Everything you copy is kept on disk,
+  except what the source marks as sensitive (KeePassXC and other password managers do; cliphist skips
+  those). A password copied from anywhere else is kept: `cliphist wipe` clears it all.
 - **Night light does nothing / `nl` missing**: needs `hyprsunset` running, and a GPU driver with gamma
   control (some VMs have none).
 
 ## Files
 
 ```text
-archminimal-hypr/
+hyprland/
 ├── hypr/
 │   ├── hyprland.lua          Hyprland (Lua, 0.57+)
 │   ├── local.lua.example     per-machine template → ~/.config/hypr/local.lua

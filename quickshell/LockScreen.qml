@@ -1,5 +1,8 @@
 // One monitor of the lock screen. Visually a copy of the login greeter
 // (sddm-login/greeter/Greeter.qml): keep the two in step when changing either.
+// One difference on purpose: no reboot / shutdown buttons. Behind a lock screen
+// your apps are still open, so anyone at the keyboard could throw away unsaved
+// work without the password. Power off from the power menu once unlocked.
 import QtQuick
 import QtQuick.Controls
 import Quickshell
@@ -273,38 +276,6 @@ Item {
                         PauseAnimation { duration: root.lock.busy ? 150 : 500 }
                     }
                 }
-            }
-        }
-    }
-
-    // ---------- BOTTOM BAR ----------
-    Row {
-        anchors { bottom: parent.bottom; right: parent.right; bottomMargin: 44; rightMargin: 44 }
-        spacing: 18
-        Text {
-            text: "reboot"
-            color: rbMa.containsMouse ? root.accent : root.mute
-            font { family: root.mono; pixelSize: 11; letterSpacing: 2; capitalization: Font.AllUppercase }
-            MouseArea {
-                id: rbMa
-                anchors.fill: parent
-                anchors.margins: -6
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: Quickshell.execDetached(["systemctl", "reboot"])
-            }
-        }
-        Text {
-            text: "shutdown"
-            color: pwMa.containsMouse ? root.danger : root.mute
-            font { family: root.mono; pixelSize: 11; letterSpacing: 2; capitalization: Font.AllUppercase }
-            MouseArea {
-                id: pwMa
-                anchors.fill: parent
-                anchors.margins: -6
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: Quickshell.execDetached(["systemctl", "poweroff"])
             }
         }
     }

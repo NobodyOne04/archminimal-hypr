@@ -34,7 +34,7 @@ PanelWindow {
 
     // ---------- entries ----------
     readonly property var powerActions: [
-        { id: "power:lock",     name: "Lock",      desc: "hyprlock",            icon: "system-lock-screen", cmd: ["loginctl", "lock-session"] },
+        { id: "power:lock",     name: "Lock",      desc: "lock screen",            icon: "system-lock-screen", cmd: ["loginctl", "lock-session"] },
         { id: "power:suspend",  name: "Suspend",   desc: "lock and sleep",      icon: "system-suspend",     cmd: ["systemctl", "suspend"] },
         { id: "power:logout",   name: "Log out",   desc: "leave hyprland",      icon: "system-log-out",     cmd: ["hyprctl", "dispatch", "hl.dsp.exit()"] },
         { id: "power:reboot",   name: "Reboot",    desc: "systemctl reboot",    icon: "system-reboot",      cmd: ["systemctl", "reboot"] },

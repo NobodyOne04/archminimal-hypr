@@ -1,0 +1,19 @@
+name: lint
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    # Arch: the same Hyprland (Lua config, 0.57+) and Quickshell the desktop runs
+    container: archlinux:base
+    env:
+      XDG_RUNTIME_DIR: /tmp/xdg   # Hyprland --verify-config wants one, even headless
+    steps:
+      - run: pacman -Syu --noconfirm --needed hyprland quickshell qt6-declarative shellcheck python make git
+      - run: mkdir -p -m 700 "$XDG_RUNTIME_DIR"
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - run: make lint
