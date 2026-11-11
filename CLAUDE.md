@@ -23,6 +23,8 @@ real hardware. Features, keys and modules: `README.md`. The login greeter is a s
 - `hypr/{hypridle,hyprlock,hyprsunset}.conf`; `hypr/local.lua.example` → untracked `~/.config/hypr/local.lua`.
 - `quickshell/`: `shell.qml` entry + IPC, `Theme.qml` every setting and colour, one file per piece;
   `scripts/stats.sh` + `stats.awk` the one long-running stats collector.
+- `cursor/archminimal/`: hyprcursor theme source (SVG + `meta.hl`); `make cursor` builds it into
+  `~/.local/share/icons` (a copy, not a link). Only the arrow shapes are drawn; the rest fall back.
 - `bin/links.sh`: install / uninstall / status of the symlinks into `~/.config` (backups in a ledger).
 - `preview/index.html`: static mock-up of the desktop; not loaded by anything.
 - `docs/adr/`: decision records (`NNNN-*.adr`, index `README.md`); read the one for a decision before changing it.

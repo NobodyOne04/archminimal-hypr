@@ -19,7 +19,7 @@ PACKAGES := hyprland hypridle hyprlock hyprpolkitagent xdg-desktop-portal-hyprla
             grim slurp wl-clipboard btop fastfetch yazi pulsemixer \
             cliphist satty hyprsunset libnotify
 
-.PHONY: help deps services check preview install uninstall status reload restart-shell lint logs memory
+.PHONY: help deps services check preview install uninstall cursor status reload restart-shell lint logs memory
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -50,12 +50,21 @@ preview: ## Open the HTML design preview in a browser
 
 install: ## Link configs into ~/.config (backs up anything already there)
 	@bin/links.sh install
+	@$(MAKE) --no-print-directory cursor
 	@mkdir -p $${XDG_STATE_HOME:-$$HOME/.local/state}/archminimal
 	@echo
 	@echo "Done. In Hyprland run 'make reload', or log in to a Hyprland session."
 
 uninstall: ## Remove the links and restore the backed-up files
 	@bin/links.sh uninstall
+	rm -rf $(CURSOR_DIR)
+
+CURSOR_DIR := $${XDG_DATA_HOME:-$$HOME/.local/share}/icons/archminimal
+
+cursor: ## Build the Arch-logo cursor (cursor/archminimal) into ~/.local/share/icons and apply it
+	@tmp=$$(mktemp -d) && hyprcursor-util --create cursor/archminimal -o $$tmp >/dev/null \
+		&& rm -rf $(CURSOR_DIR) && mkdir -p $$(dirname $(CURSOR_DIR)) && mv $$tmp/theme_archminimal $(CURSOR_DIR); rm -rf $$tmp
+	@hyprctl setcursor archminimal 24 >/dev/null 2>&1 || true
 
 status: ## Show which configs are linked and whether the shell is running
 	@bin/links.sh status

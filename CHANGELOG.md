@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Arch-logo cursor in the archminimal cyan (hyprcursor theme, `make cursor`)
 - Decision records in `docs/adr/`: ten ADRs for the repo's existing decisions
 - CI runs `make lint` (Hyprland `--verify-config`, qmllint, shellcheck, JSON) on every PR, in an Arch container
 - `CLAUDE.md`: how to work on this repo with Claude Code

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Arch-style "A": drawn upright with its apex at (32,2), then tilted -25deg so the apex is the arrow tip -->
+  <g transform="translate(6 4) scale(0.85) rotate(-25) translate(-32 -2)">
+    <path fill="#00e5ff" stroke="#18191d" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke" fill-rule="evenodd"
+      d="M32 2 C36 12 40 20 44 30 C50 42 54 50 58 60 C52 55 46 51 40 49 C40 40 36 34 32 34 C28 34 24 40 24 49 C18 51 12 55 6 60 C12 46 18 34 22 26 C25 20 28 12 32 2 Z
+         M18 36 C24 30 30 28 37 31 C30 27 24 26 20 30 Z"/>
+  </g>
+</svg>
