@@ -59,7 +59,9 @@ Then log in to Hyprland (from the [archminimal greeter](https://github.com/Nobod
 | `~/.config/fastfetch/config.jsonc` | `fastfetch/config.jsonc` |
 | `~/.local/share/archminimal/wallpaper.png` | `assets/wallpaper.png` |
 
-It also creates `~/.config/hypr/local.lua` for per-machine settings (not tracked, never overwritten).
+It also creates `~/.config/hypr/local.lua` for per-machine settings (not tracked, never overwritten), and builds the
+Arch-logo cursor from `cursor/archminimal/` into `~/.local/share/icons/archminimal` (a copy: run `make cursor` after
+editing it).
 `make uninstall` removes the links and puts your previous files back.
 
 ## Keys
@@ -148,6 +150,7 @@ outside closes. If nothing matches, `Enter` runs what you typed as a command in 
 | `make check` | verify tools, fonts, icons, services |
 | `make preview` | open the HTML mock-up |
 | `make install` / `uninstall` | link configs / remove links and restore backups |
+| `make cursor` | build and apply the Arch-logo cursor (hyprcursor theme) |
 | `make status` | what is linked, whether the shell runs |
 | `make reload` / `restart-shell` | reload Hyprland and the shell / only the shell |
 | `make lint` | shellcheck, JSON, `Hyprland --verify-config`, qmllint (when installed); CI runs it on every PR |

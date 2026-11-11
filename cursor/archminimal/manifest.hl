@@ -1,0 +1,4 @@
+name = archminimal
+description = Arch logo pointer in the archminimal cyan
+version = 0.1
+cursors_directory = hyprcursors

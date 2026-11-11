@@ -17,6 +17,7 @@ local mod      = "SUPER"
 hl.env("QS_ICON_THEME", "Papirus-Dark")
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
+hl.env("HYPRCURSOR_THEME", "archminimal")  -- Arch-logo pointer, built by `make cursor`
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 
