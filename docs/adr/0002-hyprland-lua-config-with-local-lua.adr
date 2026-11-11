@@ -1,0 +1,26 @@
+# 0002. Hyprland configured in Lua (0.57+), per-machine settings in local.lua
+
+- Status: Accepted
+- Date: 2026-11-05
+
+The compositor config is `hypr/hyprland.lua` in Hyprland's Lua format (0.57+), with machine-specific
+settings in an untracked `~/.config/hypr/local.lua` loaded last.
+
+## Technical details
+- **Format**: `hl.config`, `hl.bind`, `hl.monitor`, `hl.on("hyprland.start", …)`, dispatchers as
+  `hl.dsp.*`. From shell or `.conf` files: `hyprctl dispatch 'hl.dsp.…'`. Never hyprlang.
+- **Sections**: environment, monitors (`preferred`/`auto` default), autostart (quickshell, hypridle,
+  hyprpolkitagent, hyprsunset, cliphist watchers), input, look, window rules, keys.
+- **Window rule**: apps may not maximize themselves (`suppress_event = "maximize"`): Hyprland marks
+  every window maximized, kitty and Firefox remembered it and each new window hid the others.
+- **`local.lua`**: `make install` copies `hypr/local.lua.example` there once, never overwrites it.
+  Loaded with `pcall(dofile, …)`; a syntax error is re-raised with the file name, never silently
+  ignored. Monitors, scaling, extra keyboard layouts, shadows off on weak GPUs go there.
+- **Verification**: `Hyprland --verify-config --config hypr/hyprland.lua` must say `config ok`
+  ([0010](0010-ci-lint-in-an-arch-container.adr)).
+- **Consequences**: requires Hyprland 0.57+; real logic (pcall, locals) in the config. Machine
+  differences stay out of git.
+
+## Technologies and alternatives
+- Involved: Hyprland 0.57.1.
+- Alternatives: hyprlang `hyprland.conf`: the older format, superseded upstream by Lua.

@@ -1,0 +1,24 @@
+# 0008. Install by symlinks, with backups in a ledger
+
+- Status: Accepted
+- Date: 2026-11-05
+
+`make install` links (not copies) the repo's files into `~/.config`, so editing the repo changes the
+running desktop; whatever was there before is moved aside and restored by `make uninstall`.
+
+## Technical details
+- **`bin/links.sh install|uninstall|status`** (POSIX sh, `set -eu`). `LINKS` lists source → target:
+  `hypr/{hyprland.lua,hyprlock.conf,hypridle.conf,hyprsunset.conf}` → `~/.config/hypr/`,
+  `quickshell/` → `~/.config/quickshell/archminimal`, `kitty/kitty.conf`, `fastfetch/config.jsonc`,
+  `assets/wallpaper.png` → `~/.local/share/archminimal/wallpaper.png`.
+- **Backups**: an existing file is moved to `<target>.bak-<timestamp>` and recorded in
+  `~/.local/state/archminimal/backups.txt`; uninstall removes only links pointing into this repo and
+  restores the last backup per target. Nothing is deleted.
+- **`RETIRED`**: links from older versions (Ghostty) are removed on install, backups restored.
+- **`local.lua`** is created once and kept on uninstall.
+- **Packages**: `make deps` installs everything from the official repos with pacman and enables
+  bluetooth and power-profiles-daemon; `make check` verifies tools, fonts, icons, services.
+- **Consequences**: the checkout is the live desktop; uninstall is clean.
+
+## Technologies and alternatives
+- Alternatives: copying files: edits in the repo wouldn't apply; GNU stow: not recorded at the time.
