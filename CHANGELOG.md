@@ -11,4 +11,5 @@
   unsaved work in the apps behind it, without the password
 - README: clone path and repo name, links to the login screen repo (the greeter link pointed at a folder
   that doesn't exist), and the clipboard note (password managers' copies are already skipped by cliphist)
+- `make lint` never ran qmllint on Arch (it lives in `/usr/lib/qt6/bin`, not on PATH); now it does
 - Launcher power menu: Lock says "lock screen", not "hyprlock" (that's only the fallback)

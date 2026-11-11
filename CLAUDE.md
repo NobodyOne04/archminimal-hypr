@@ -6,8 +6,12 @@ real hardware. Features, keys and modules: `README.md`. The login greeter is a s
 (`NobodyOne04/sddm-login`); the lock screen copies its look.
 
 ## Commands
-- `make lint`: shellcheck, fastfetch JSON, `Hyprland --verify-config`, qmllint. CI runs it in an Arch
-  container on every PR. It doesn't run on macOS (no Hyprland there): push and read CI, or run it on the VM.
+- `make lint`: shellcheck, fastfetch JSON, `Hyprland --verify-config` (must say `config ok`), qmllint. CI runs
+  it in an Arch container (as a non-root user: Hyprland refuses root) on every PR. It doesn't run on macOS
+  (no Hyprland there): push and read CI, or run it on the VM.
+- qmllint is informational, never fails: ~200 warnings, nearly all false ("Member … not found on type Theme":
+  it doesn't know Quickshell's `pragma Singleton` types; unqualified access; `PanelWindow` "not creatable").
+  Look for *new* kinds of warning in the files you touched, not the count.
 - `make check`: tools, fonts, icons, services present (on the Arch machine).
 - On the Arch machine: `make reload` (Hyprland + shell), `make restart-shell`, `make logs`, `make status`.
 
