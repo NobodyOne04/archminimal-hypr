@@ -36,8 +36,11 @@ desktop.
 
 ## Install
 
+As part of the whole setup, [`archminimal-setup`](https://github.com/NobodyOne04/archminimal-setup)'s `make all`
+does this. On its own:
+
 ```bash
-git clone git@github.com:NobodyOne04/hyprland.git ~/projects/hyprland && cd ~/projects/hyprland
+git clone git@github.com:NobodyOne04/archminimal-hypr.git ~/projects/archminimal-hypr && cd ~/projects/archminimal-hypr
 make deps       # pacman packages (all official repos) + enables bluetooth and power-profiles-daemon
 make check      # verifies tools, fonts, icon theme and services
 make install    # symlinks configs into ~/.config; anything already there is backed up
@@ -169,7 +172,7 @@ outside closes. If nothing matches, `Enter` runs what you typed as a command in 
 ## Files
 
 ```text
-hyprland/
+archminimal-hypr/
 ├── hypr/
 │   ├── hyprland.lua          Hyprland (Lua, 0.57+)
 │   ├── local.lua.example     per-machine template → ~/.config/hypr/local.lua

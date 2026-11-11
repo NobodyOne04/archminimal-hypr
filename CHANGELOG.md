@@ -6,6 +6,10 @@
 - CI runs `make lint` (Hyprland `--verify-config`, qmllint, shellcheck, JSON) on every PR, in an Arch container
 - `CLAUDE.md`: how to work on this repo with Claude Code
 
+### Changed
+- Renamed `hyprland` → `archminimal-hypr` (on GitHub: history kept, old URLs redirect); README clone path
+  and file tree follow
+
 ### Fixed
 - Links and comments point to the login screen's new repo, `archminimal-greeter` (was `sddm-login`)
 - The lock screen no longer has reboot / shutdown buttons: anyone at the keyboard could throw away the

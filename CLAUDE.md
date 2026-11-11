@@ -1,4 +1,6 @@
-# hyprland (archminimal-hypr)
+# archminimal-hypr
+
+Formerly `hyprland` (renamed on GitHub; old URLs redirect).
 
 My Arch desktop: Hyprland (Lua config, 0.57+), a Quickshell shell (bar, launcher, lock screen,
 notifications, key list), kitty and fastfetch, in the archminimal look. Runs daily in an Arch VM; not yet on
