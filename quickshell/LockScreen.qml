@@ -1,5 +1,5 @@
 // One monitor of the lock screen. Visually a copy of the login greeter
-// (sddm-login/greeter/Greeter.qml): keep the two in step when changing either.
+// (archminimal-greeter/greeter/Greeter.qml): keep the two in step when changing either.
 // One difference on purpose: no reboot / shutdown buttons. Behind a lock screen
 // your apps are still open, so anyone at the keyboard could throw away unsaved
 // work without the password. Power off from the power menu once unlocked.

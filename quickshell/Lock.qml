@@ -1,4 +1,4 @@
-// Session lock: the same screen as the login greeter (../../sddm-login/greeter),
+// Session lock: the same screen as the login greeter (../../archminimal-greeter/greeter),
 // drawn on every monitor through ext-session-lock and unlocked with PAM.
 //
 //   qs -c archminimal ipc call lock lock      (hypridle's lock_cmd)

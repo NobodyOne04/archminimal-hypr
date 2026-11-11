@@ -7,6 +7,7 @@
 - `CLAUDE.md`: how to work on this repo with Claude Code
 
 ### Fixed
+- Links and comments point to the login screen's new repo, `archminimal-greeter` (was `sddm-login`)
 - The lock screen no longer has reboot / shutdown buttons: anyone at the keyboard could throw away the
   unsaved work in the apps behind it, without the password
 - README: clone path and repo name, links to the login screen repo (the greeter link pointed at a folder
