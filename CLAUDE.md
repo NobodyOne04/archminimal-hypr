@@ -25,6 +25,7 @@ real hardware. Features, keys and modules: `README.md`. The login greeter is a s
   `scripts/stats.sh` + `stats.awk` the one long-running stats collector.
 - `bin/links.sh`: install / uninstall / status of the symlinks into `~/.config` (backups in a ledger).
 - `preview/index.html`: static mock-up of the desktop; not loaded by anything.
+- `docs/adr/`: decision records (`NNNN-*.adr`, index `README.md`); read the one for a decision before changing it.
 
 ## Conventions
 - Hyprland is configured in **Lua** (`hl.config`, `hl.bind`, `hl.dsp.*`), not hyprlang. Dispatch from

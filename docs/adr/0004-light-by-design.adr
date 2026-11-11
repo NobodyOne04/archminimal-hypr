@@ -1,0 +1,26 @@
+# 0004. Light by design: one stats loop, no blur, GPU never woken
+
+- Status: Accepted
+- Date: 2026-11-05
+
+The desktop stays cheap to run: system stats come from one long-lived `awk` loop, the compositor has no
+blur, and a sleeping NVIDIA dGPU is never woken just to be measured.
+
+## Technical details
+- **Stats**: `quickshell/scripts/stats.sh` starts once and runs `stats.awk`, which reads `/proc` and
+  `/sys` every 2 s and prints one JSON object per line to the bar. The only per-tick cost is one
+  `sleep` (plus `nvidia-smi` while an NVIDIA GPU is awake). No process is spawned per bar module per
+  tick.
+- **GPU**: `$ARCHMINIMAL_GPU` / `gpu` in `Theme.qml`: `auto | amd | intel | nvidia | none`. `auto`
+  uses an awake NVIDIA GPU if present, else the AMD/Intel one. The dGPU's
+  `device/power/runtime_status` is checked first; a runtime-suspended one is not queried.
+- **Compositor**: `blur = { enabled = false }` (the costly one), one soft low shadow and rounding 6
+  (2026-11-08; off in `local.lua` on weak GPUs or VMs), short animations.
+- **Measure**: `make memory` shows RSS per piece.
+- **Consequences**: stats lag by up to 2 s. New bar data must be added to the awk loop, not as a new
+  per-tick command.
+
+## Technologies and alternatives
+- Involved: gawk, `/proc`, `/sys/class/hwmon`, `nvidia-smi`.
+- Alternatives: a command per module per tick (waybar style): many short-lived processes every
+  interval.

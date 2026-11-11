@@ -1,0 +1,21 @@
+# 0007. Idle: hypridle dims, locks, turns off, suspends; lock before sleep
+
+- Status: Accepted
+- Date: 2026-11-06
+
+hypridle runs the idle chain, and the system only suspends once the lock screen is up, so the screen's
+contents never flash on resume.
+
+## Technical details
+- **`hypr/hypridle.conf`**: 4 min dim to 10 % (`brightnessctl -s`/`-r`), 5 min
+  `loginctl lock-session`, 5.5 min DPMS off, 15 min `systemctl suspend`.
+- **Sleep**: `before_sleep_cmd = loginctl lock-session`, `inhibit_sleep = 3` (wait for the session
+  lock before sleeping), `after_sleep_cmd` turns DPMS back on.
+- **`Super + L`** locks (2026-11-07); an earlier day it logged out, which closed every open app.
+- **Night light** (2026-11-08): hyprsunset with `hypr/hyprsunset.conf` (4000 K from 21:00, neutral
+  from 07:00), toggled from the bar or `Super + Shift + W`.
+- **Consequences**: timings are for a laptop; change them in `hypridle.conf`.
+
+## Technologies and alternatives
+- Involved: hypridle, brightnessctl, logind, hyprsunset.
+- Alternatives: not recorded at the time.

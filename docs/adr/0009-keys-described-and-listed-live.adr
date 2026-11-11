@@ -1,0 +1,21 @@
+# 0009. Every key bind is described; Super + / lists them live
+
+- Status: Accepted
+- Date: 2026-11-08
+
+Each bind in `hyprland.lua` carries a `"group: what"` description, and the on-screen key list reads the
+binds from Hyprland itself, so it can't drift from the config.
+
+## Technical details
+- **Binds**: a local `bind(keys, desc, dispatcher, opts)` helper in `hyprland.lua` sets
+  `description = "group: what"` on every `hl.bind`; the group (`apps`, `windows`, `workspaces`, …)
+  is the heading in the list. Binds sharing a description are merged (`Super + 1…9`).
+- **`Super + /`**: `quickshell/Cheatsheet.qml` runs `hyprctl binds -j` and shows every bind with a
+  description, grouped. A new bind with a description appears without touching the QML.
+- **Layout of keys** (README table): `Super + T/B/F` kitty / Firefox / launcher; `Super + L` lock
+  (so focus-right is `→`); `Super + Shift + …` for the moved actions; media keys work while locked.
+- **Consequences**: a bind without a description is invisible in the list; the README table is kept
+  by hand.
+
+## Technologies and alternatives
+- Alternatives: a hand-written cheat sheet: drifts from the config.

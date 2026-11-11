@@ -1,0 +1,27 @@
+# 0006. Lock screen: a Quickshell session lock in the greeter's look, no power buttons
+
+- Status: Accepted
+- Date: 2026-11-06
+
+The screen is locked by the shell itself through `ext-session-lock`, drawn like the archminimal login
+greeter and unlocked with PAM; hyprlock is only the fallback.
+
+## Technical details
+- **Files**: `quickshell/Lock.qml` (`WlSessionLock` on every monitor, `PamContext` with
+  `config: "hyprlock"` → `/etc/pam.d/hyprlock`), `LockScreen.qml` (wallpaper, vignette, scanlines,
+  glitch, corner marks, clock, user, password). The password is shared across monitors.
+- **Triggers**: `qs -c archminimal ipc call lock lock`; `Super + L` / `Super + Escape`; hypridle's
+  `lock_cmd = qs … lock lock || pidof hyprlock || hyprlock` ([0007](0007-idle-chain-with-hypridle.adr)).
+- **No power buttons** (2026-11-11): apps are still open behind the lock, so reboot / shutdown would
+  let anyone at the keyboard throw away unsaved work without the password. Don't add actions that
+  work without it.
+- **Crash safety**: `misc.allow_session_lock_restore = true`: if quickshell dies while locked the
+  session stays locked (Hyprland's fallback screen), and a restarted shell takes the lock back.
+  `make restart-shell` refuses while locked.
+- **Consequences**: one look for login and lock; the look is copied from `archminimal-greeter`
+  (`greeter/Greeter.qml`) by hand and must be kept in step.
+
+## Technologies and alternatives
+- Involved: Quickshell `Quickshell.Wayland` (WlSessionLock), `Quickshell.Services.Pam`, hyprlock.
+- Alternatives: hyprlock alone (`hypr/hyprlock.conf`, the first lock screen, styled like the
+  greeter): why it was replaced beyond matching the greeter wasn't recorded; kept as the fallback.

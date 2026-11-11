@@ -1,0 +1,29 @@
+# 0003. One Quickshell process draws the whole shell
+
+- Status: Accepted
+- Date: 2026-11-05
+
+Bar, launcher, wallpaper, lock screen, notifications, key list, calendar and night-light toggle are all
+QML in one Quickshell process (`qs -c archminimal`), not separate daemons.
+
+## Technical details
+- **Files**: `quickshell/shell.qml` entry + IPC handlers; `Theme.qml` holds every setting and colour
+  (thresholds, click commands, workspace count, GPU choice, notification timeout); one file per piece
+  (`Bar.qml`, `Launcher.qml`, `Lock.qml`, `Notifications.qml`, `Cheatsheet.qml`, `Calendar.qml`, …).
+- **IPC**: Hyprland binds and hypridle call `qs -c archminimal ipc call <target> <fn>`
+  (`IpcHandler` blocks), e.g. `lock lock`, launcher, clipboard, notifications.
+- **Notifications**: Quickshell's `NotificationServer` is the daemon (2026-11-08): themed popups,
+  critical in red, do not disturb; no history panel by design. Only one daemon can own the bus, so
+  mako/dunst/swaync must not run.
+- **Popups exist only while shown**: launcher, key list, calendar are created on demand; the calendar
+  is a full-screen overlay like the launcher (an xdg popup with focus grab got no clicks).
+- **Commands from QML**: `Quickshell.execDetached([...])` with an argument array; user text is passed
+  as `"$1"` to `sh -c`, never spliced into a shell string.
+- **Restart**: `make restart-shell`; it refuses while the screen is locked, since restarting the
+  process drops the lock screen ([0006](0006-quickshell-lock-screen.adr)).
+- **Consequences**: one process to restart and debug (`make logs`); one QML codebase shares the theme.
+  A crash takes every piece down at once.
+
+## Technologies and alternatives
+- Involved: Quickshell 0.3.2, Qt 6, Papirus-Dark icons.
+- Alternatives: waybar + rofi/fuzzel + mako: several configs and processes, no shared theme or IPC.

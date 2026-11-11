@@ -1,0 +1,22 @@
+# 0005. kitty is the terminal (replaced Ghostty)
+
+- Status: Accepted
+- Date: 2026-11-06
+
+kitty replaced Ghostty as the desktop's terminal, because Ghostty did not run on the VM's graphics and
+kitty needs only OpenGL 3.3.
+
+## Technical details
+- **Config**: `kitty/kitty.conf` → `~/.config/kitty/kitty.conf`: archminimal palette, padding,
+  opacity, no ligatures, block cursor, quiet bottom tab bar; `remember_window_size no` (it restored a
+  maximized size). Validated with kitty's own config parser (kitty 0.49).
+- **Uses**: `local terminal = "kitty"` in `hyprland.lua`; files are `kitty -e yazi`; bar click
+  actions (btop, nmtui, bluetui, pulsemixer) and launcher terminal apps (`Terminal=true`) open in kitty.
+- **Migration**: `bin/links.sh` has a `RETIRED` list; `make install` removes the old
+  `~/.config/ghostty/config` link and restores any backup it replaced.
+- **Consequences**: kitty on Arch, Ghostty on the Mac (its own repo), each with the archminimal
+  palette.
+
+## Technologies and alternatives
+- Involved: kitty.
+- Alternatives: Ghostty: didn't run on the VM's graphics; foot: not recorded at the time.

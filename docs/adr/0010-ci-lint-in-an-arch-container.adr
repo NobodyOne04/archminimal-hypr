@@ -1,0 +1,23 @@
+# 0010. CI lints in an Arch container as a non-root user
+
+- Status: Accepted
+- Date: 2026-11-11
+
+Every PR runs `make lint` in an `archlinux:base` container with the same Hyprland and Quickshell the
+desktop uses, because none of it can be checked on the Mac.
+
+## Technical details
+- **`make lint`**: `bash -n`/`sh -n` and shellcheck on `bin/links.sh` and `stats.sh`; fastfetch JSON
+  (comments stripped); `Hyprland --verify-config --config hypr/hyprland.lua` (must say `config ok`);
+  qmllint, found in `/usr/lib/qt6/bin` where Arch puts it.
+- **qmllint is informational**: ~200 warnings, nearly all false (`pragma Singleton` types, unqualified
+  access, `PanelWindow` "not creatable"); it never fails the build. Look for new kinds of warning.
+- **`.github/workflows/lint.yml`**: on PRs and pushes to main; `pacman -Syu hyprland quickshell
+  qt6-declarative shellcheck python make git`; a `ci` user and `XDG_RUNTIME_DIR=/tmp/xdg`, since
+  Hyprland refuses root and wants a runtime dir. `actions/checkout` pinned by SHA.
+- **Limits**: CI proves the config parses, not that it looks or behaves right; visual or input
+  changes are tried on the Arch VM before merging.
+
+## Technologies and alternatives
+- Involved: GitHub Actions, archlinux:base, Hyprland, Quickshell, shellcheck.
+- Alternatives: lint only on the VM: nothing checked a PR from the Mac.
