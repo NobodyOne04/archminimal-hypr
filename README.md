@@ -1,7 +1,7 @@
 # archminimal-hypr
 
 A minimal, lightweight Hyprland desktop for Arch Linux in the same style as the
-[archminimal login screen](https://github.com/NobodyOne04/sddm-login): dark, monospace, one cyan accent, corner marks and a `sys::` voice.
+[archminimal login screen](https://github.com/NobodyOne04/archminimal-greeter): dark, monospace, one cyan accent, corner marks and a `sys::` voice.
 
 - **Bar**: workspaces, window title, clock, then CPU, memory, GPU, temperature, network, Bluetooth, keyboard
   layout, volume, battery with power profile, and a power button. Hover any value for details; click to act.
@@ -43,7 +43,7 @@ make check      # verifies tools, fonts, icon theme and services
 make install    # symlinks configs into ~/.config; anything already there is backed up
 ```
 
-Then log in to Hyprland (from the [archminimal greeter](https://github.com/NobodyOne04/sddm-login) or any login manager), or run
+Then log in to Hyprland (from the [archminimal greeter](https://github.com/NobodyOne04/archminimal-greeter) or any login manager), or run
 `make reload` if you are already in it.
 
 `make install` links (not copies) the files, so editing this repo changes your desktop directly. It touches:

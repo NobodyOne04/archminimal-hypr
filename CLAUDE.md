@@ -3,7 +3,7 @@
 My Arch desktop: Hyprland (Lua config, 0.57+), a Quickshell shell (bar, launcher, lock screen,
 notifications, key list), kitty and fastfetch, in the archminimal look. Runs daily in an Arch VM; not yet on
 real hardware. Features, keys and modules: `README.md`. The login greeter is a separate repo
-(`NobodyOne04/sddm-login`); the lock screen copies its look.
+(`NobodyOne04/archminimal-greeter`); the lock screen copies its look.
 
 ## Commands
 - `make lint`: shellcheck, fastfetch JSON, `Hyprland --verify-config` (must say `config ok`), qmllint. CI runs
