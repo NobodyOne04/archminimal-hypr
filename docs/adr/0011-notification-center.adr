@@ -1,0 +1,44 @@
+# 0011. Notification center: session history panel opened from the bar
+
+- Status: Accepted
+- Date: 2026-11-18
+
+Keep every notification of the session in a list I can open from the bar, act on and clear. This
+reverses the "no history panel by design" line in [0003](0003-one-quickshell-process-for-the-shell.adr).
+
+## Technical details
+- **Problem**: popups expire after `Theme.notifyTimeout` and are gone; under do not disturb they are
+  dropped unseen. There is no way to look back at what arrived.
+- **Store**: `quickshell/NotifyState.qml` (singleton, today only `dnd`) gains `history`: snapshots
+  `{ id, app, summary, body, icon, urgency, time, live }`, newest first, capped at `Theme.notifyHistory`
+  (new setting, default 50), and `unread` (entries added since the panel was last opened).
+  **In memory only**: lost on shell restart or logout. Nothing is written to disk.
+- **Recording**: `Notifications.qml` `onNotification` records every notification, including those
+  DND suppresses. DND still hides the popup (critical ones still pop). *Change*: today DND drops them
+  entirely.
+- **Popups**: unchanged (timeout, hover holds, click / right click, `Theme.notifyMax`).
+- **Actions**: while the sending app still holds the notification (`live`), the panel shows its default
+  action and buttons; after it expires or is dismissed the entry is plain text. Implementation keeps
+  the live `Notification` reachable (e.g. stays tracked after its popup hides, with a separate
+  "popup shown" flag) and still reports expiry to the app.
+- **Panel** (`quickshell/NotificationCenter.qml`, new): under the bar at the right edge of the focused
+  monitor, in the card look (`Theme.panel`, accent rule). Header `sys::notifications`, count,
+  `dnd on/off`, `clear all`. Rows: app · relative time, summary, body (clipped), action buttons if live,
+  `×` to clear. Click a row = default action if live. Closes on Escape, click outside, or the bar
+  module. Created only while open ([0004](0004-light-by-design.adr), [0003](0003-one-quickshell-process-for-the-shell.adr)).
+- **Bar**: new `ntf` module in `Bar.qml`: unread count, accent when > 0, hidden when the history is
+  empty and DND is off. The existing `dnd` module folds into it. Left click = panel, right click = DND.
+- **IPC** (`notifications`): keeps `clear` (dismiss popups), `dnd`, `isDnd`; adds `panel` (toggle) and
+  `clearAll` (empty history).
+- **Keys**: proposed `Super+Alt+N` opens the panel, after a clash check; described per
+  [0009](0009-keys-described-and-listed-live.adr). `Super+N` / `Super+Shift+N` unchanged.
+- **Consequences**: + nothing is lost to a timeout or DND; one place to act on notifications.
+  − up to 50 snapshots held in memory; actions on old entries disappear once the app drops them;
+  history does not survive a shell restart. On acceptance, the "no history panel by design" line in
+  0003 is amended to point here (with your OK).
+
+## Technologies and alternatives
+- Involved: Quickshell 0.3.2 `Quickshell.Services.Notifications` (`NotificationServer`,
+  `trackedNotifications`).
+- Alternatives: swaync / mako history: a second daemon fighting Quickshell for the bus (0003);
+  history saved to disk: survives restarts but stores message contents on disk, not needed.
