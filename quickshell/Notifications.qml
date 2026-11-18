@@ -1,15 +1,18 @@
 // Notification popups (top right of the focused monitor). Quickshell is the
-// notification daemon, so no mako/dunst is needed.
+// notification daemon, so no mako/dunst is needed. Every notification also goes
+// into the session history (NotifyState), listed by NotificationCenter (ADR-0011).
 //
-//   click        default action, or dismiss when there is none
-//   right click  dismiss
+//   click        default action, or hide the popup when there is none
+//   right click  hide the popup (it stays in the notification center)
 //   hover        keeps it on screen
 //
-//   qs -c archminimal ipc call notifications clear   (Super+N)
-//   qs -c archminimal ipc call notifications dnd     (Super+Shift+N)
+//   qs -c archminimal ipc call notifications clear      hide popups (Super+N)
+//   qs -c archminimal ipc call notifications dnd        (Super+Shift+N)
+//   qs -c archminimal ipc call notifications panel      center (Super+Alt+N)
+//   qs -c archminimal ipc call notifications clearAll   empty the history
 //
-// Do not disturb drops everything except critical notifications (low battery,
-// failed updates). There is no history panel, by design.
+// Do not disturb hides every popup except critical ones (low battery, failed
+// updates); the notifications still land in the center.
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -20,12 +23,6 @@ import Quickshell.Services.Notifications
 Scope {
     id: root
 
-    readonly property var list: server.trackedNotifications.values
-
-    function clear() {
-        for (const n of list.slice()) n.dismiss()
-    }
-
     NotificationServer {
         id: server
         keepOnReload: false
@@ -35,13 +32,10 @@ Scope {
         imageSupported: true
         persistenceSupported: false
 
+        // tracked until the app closes it or it's cleared, so actions work from the center
         onNotification: n => {
-            if (NotifyState.dnd && n.urgency !== NotificationUrgency.Critical)
-                return                                  // untracked = dropped
-            const shown = root.list
-            for (let i = 0; i <= shown.length - Theme.notifyMax; i++)
-                shown[i].expire()
             n.tracked = true
+            NotifyState.add(n)
         }
     }
 
@@ -53,7 +47,7 @@ Scope {
             return Quickshell.screens.find(s => s.name === name) || Quickshell.screens[0]
         }
 
-        visible: root.list.length > 0
+        visible: NotifyState.popups.length > 0 && !NotifyState.panelOpen    // the center covers the same corner
         screen: focusedScreen
         anchors { top: true; right: true }
         margins { top: Theme.barHeight + 10; right: 10 }
@@ -71,21 +65,20 @@ Scope {
             height: contentHeight
             spacing: 8
             interactive: false
-            // the server's live model, so existing popups keep their timers;
+            // ScriptModel keyed by entry, so existing popups keep their timers;
             // bottom-to-top puts the newest on top
             verticalLayoutDirection: ListView.BottomToTop
-            model: server.trackedNotifications
+            model: ScriptModel { values: NotifyState.popups; objectProp: "key" }
 
             delegate: Rectangle {
                 id: card
                 required property var modelData
-                readonly property var n: modelData
-                readonly property bool critical: n.urgency === NotificationUrgency.Critical
-                readonly property var defaultAction: n.actions.find(a => a.identifier === "default") || null
-                readonly property var buttons: n.actions.filter(a => a.identifier !== "default" && a.text !== "")
-                readonly property string iconSource: n.image !== "" ? n.image
-                    : n.appIcon !== "" ? Quickshell.iconPath(n.appIcon, true)
-                    : n.desktopEntry !== "" ? Quickshell.iconPath(n.desktopEntry, true) : ""
+                readonly property var e: modelData
+                readonly property var n: NotifyState.live[e.key] || null
+                readonly property bool critical: e.critical
+                readonly property var defaultAction: n ? n.actions.find(a => a.identifier === "default") || null : null
+                readonly property var buttons: n ? n.actions.filter(a => a.identifier !== "default" && a.text !== "") : []
+                readonly property string iconSource: e.icon
 
                 width: stack.width
                 implicitHeight: body.implicitHeight + 26
@@ -101,9 +94,9 @@ Scope {
                 Timer {
                     // the app's timeout arrives in milliseconds (as sent over D-Bus),
                     // otherwise our default; critical ones stay until clicked
-                    interval: card.n.expireTimeout > 0 ? card.n.expireTimeout : Theme.notifyTimeout * 1000
+                    interval: card.n && card.n.expireTimeout > 0 ? card.n.expireTimeout : Theme.notifyTimeout * 1000
                     running: !card.critical && !ma.containsMouse
-                    onTriggered: card.n.expire()
+                    onTriggered: NotifyState.unpop(card.e.key)
                 }
 
                 MouseArea {
@@ -114,7 +107,7 @@ Scope {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: mouse => {
                         if (mouse.button === Qt.LeftButton && card.defaultAction) card.defaultAction.invoke()
-                        else card.n.dismiss()
+                        NotifyState.unpop(card.e.key)
                     }
                 }
 
@@ -142,7 +135,7 @@ Scope {
                         Text {
                             width: parent.width
                             elide: Text.ElideRight
-                            text: (card.n.appName || "notification").toLowerCase()
+                            text: card.e.app.toLowerCase()
                             color: card.critical ? Theme.danger : Theme.mute
                             font { family: Theme.font; pixelSize: 10; letterSpacing: 2 }
                         }
@@ -153,7 +146,7 @@ Scope {
                             maximumLineCount: 2
                             elide: Text.ElideRight
                             textFormat: Text.PlainText
-                            text: card.n.summary
+                            text: card.e.summary
                             color: Theme.fg
                             font { family: Theme.font; pixelSize: 13; letterSpacing: 0.5 }
                         }
@@ -164,7 +157,7 @@ Scope {
                             maximumLineCount: 4
                             elide: Text.ElideRight
                             textFormat: Text.PlainText
-                            text: card.n.body
+                            text: card.e.body
                             color: Theme.mute
                             font { family: Theme.font; pixelSize: 11; letterSpacing: 0.5 }
                         }
@@ -198,8 +191,12 @@ Scope {
 
     IpcHandler {
         target: "notifications"
-        function clear(): void { root.clear() }
+        function clear(): void { NotifyState.hidePopups() }
         function dnd(): void { NotifyState.dnd = !NotifyState.dnd }
         function isDnd(): bool { return NotifyState.dnd }
+        function panel(): void { NotifyState.panelOpen = !NotifyState.panelOpen }
+        function clearAll(): void { NotifyState.clearAll() }
     }
+
+    NotificationCenter {}
 }

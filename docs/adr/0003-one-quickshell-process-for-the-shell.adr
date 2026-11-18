@@ -13,7 +13,7 @@ QML in one Quickshell process (`qs -c archminimal`), not separate daemons.
 - **IPC**: Hyprland binds and hypridle call `qs -c archminimal ipc call <target> <fn>`
   (`IpcHandler` blocks), e.g. `lock lock`, launcher, clipboard, notifications.
 - **Notifications**: Quickshell's `NotificationServer` is the daemon (2026-11-08): themed popups,
-  critical in red, do not disturb; no history panel by design. Only one daemon can own the bus, so
+  critical in red, do not disturb; history panel since [0011](0011-notification-center.adr) (was "no history panel by design"). Only one daemon can own the bus, so
   mako/dunst/swaync must not run.
 - **Popups exist only while shown**: launcher, key list, calendar are created on demand; the calendar
   is a full-screen overlay like the launcher (an xdg popup with focus grab got no clicks).

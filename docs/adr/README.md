@@ -14,3 +14,4 @@ Decisions behind this desktop. Format and statuses: [0001](0001-record-decisions
 | [0008](0008-install-by-symlinks-with-backup-ledger.adr) | Install by symlinks, with backups in a ledger | Accepted |
 | [0009](0009-keys-described-and-listed-live.adr) | Every key bind is described; Super + / lists them live | Accepted |
 | [0010](0010-ci-lint-in-an-arch-container.adr) | CI lints in an Arch container as a non-root user | Accepted |
+| [0011](0011-notification-center.adr) | Notification center: session history panel opened from the bar | Accepted |
