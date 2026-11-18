@@ -186,6 +186,8 @@ bind(mod .. " + N",           "session: hide notification popups", run(qs .. " n
 bind(mod .. " + ALT + N",     "session: notification center", run(qs .. " notifications panel"))
 bind(mod .. " + SHIFT + N",   "session: do not disturb",   run(qs .. " notifications dnd"))
 bind(mod .. " + SHIFT + W",   "session: night light",      run(qs .. " night toggle"))
+bind(mod .. " + SHIFT + M",   "session: mic on / off",     run(qs .. " privacy mic"))
+bind(mod .. " + SHIFT + C",   "session: camera on / off",  run(qs .. " privacy cam"))
 
 -- windows
 bind(mod .. " + Q",           "windows: close",            hl.dsp.window.close())

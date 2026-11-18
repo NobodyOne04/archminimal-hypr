@@ -19,7 +19,7 @@ PACKAGES := hyprland hypridle hyprlock hyprpolkitagent xdg-desktop-portal-hyprla
             grim slurp wl-clipboard btop fastfetch yazi pulsemixer \
             cliphist satty hyprsunset libnotify
 
-.PHONY: help deps services check preview install uninstall cursor status reload restart-shell lint logs memory
+.PHONY: help deps services privacy check preview install uninstall cursor status reload restart-shell lint logs memory
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -31,6 +31,12 @@ deps: ## Install all packages (asks for sudo; everything is in the official repo
 services: ## Enable bluetooth and power profiles (asks for sudo)
 	sudo systemctl enable --now bluetooth.service power-profiles-daemon.service
 
+privacy: ## Install the camera kill switch: root helper + polkit rule (asks for sudo; ADR-0012)
+	@# copied, not linked: a user-writable checkout must not change what root runs
+	sudo install -D -o root -g root -m 755 bin/archminimal-camera /usr/local/bin/archminimal-camera
+	sudo install -D -o root -g root -m 644 privacy/50-archminimal-camera.rules /etc/polkit-1/rules.d/50-archminimal-camera.rules
+	@echo "Done. 'make restart-shell' to pick it up."
+
 check: ## Verify that the tools, fonts and icon theme are present
 	@ok=1; \
 	for c in Hyprland hyprctl hypridle hyprlock hyprsunset qs kitty grim slurp satty wl-copy wl-paste cliphist wpctl brightnessctl playerctl btop; do \
@@ -40,6 +46,8 @@ check: ## Verify that the tools, fonts and icon theme are present
 		if fc-list 2>/dev/null | grep -q "$$f"; then echo "  ok       font: $$f"; else echo "  MISSING  font: $$f"; ok=0; fi; \
 	done; \
 	if [ -d /usr/share/icons/Papirus-Dark ]; then echo "  ok       icons: Papirus-Dark"; else echo "  MISSING  icons: Papirus-Dark"; ok=0; fi; \
+	if [ -x /usr/local/bin/archminimal-camera ]; then echo "  ok       camera switch (make privacy)"; \
+	else echo "  off      camera switch: not installed (optional: make privacy)"; fi; \
 	for s in bluetooth power-profiles-daemon; do \
 		printf "  %-8s %s\n" "$$(systemctl is-active $$s 2>/dev/null || echo off)" "service: $$s"; \
 	done; \
@@ -81,8 +89,8 @@ restart-shell: ## Restart only the quickshell bar/launcher
 	hyprctl dispatch 'hl.dsp.exec_cmd("$(QS)")'
 
 lint: ## Static checks: shell scripts, JSON, Hyprland config, QML (when tools exist)
-	@bash -n bin/links.sh && sh -n quickshell/scripts/stats.sh && echo "  ok   shell syntax"
-	@if command -v shellcheck >/dev/null; then shellcheck bin/links.sh quickshell/scripts/stats.sh && echo "  ok   shellcheck"; \
+	@bash -n bin/links.sh && sh -n quickshell/scripts/stats.sh && sh -n bin/archminimal-camera && echo "  ok   shell syntax"
+	@if command -v shellcheck >/dev/null; then shellcheck bin/links.sh quickshell/scripts/stats.sh bin/archminimal-camera && echo "  ok   shellcheck"; \
 	else echo "  skip shellcheck (not installed)"; fi
 	@python3 -c 'import json,re; json.loads(re.sub(r"(?m)^\s*//.*$$", "", open("fastfetch/config.jsonc").read()))' && echo "  ok   fastfetch json"
 	@if command -v Hyprland >/dev/null; then Hyprland --verify-config --config hypr/hyprland.lua && echo "  ok   hyprland.lua"; \
