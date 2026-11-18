@@ -1,0 +1,9 @@
+// Camera kill switch (ADR-0012): local, active wheel users may run the switch, and only it,
+// without a password. Installed by `make privacy`.
+polkit.addRule(function (action, subject) {
+    if (action.id == "org.freedesktop.policykit.exec" &&
+        action.lookup("program") == "/usr/local/bin/archminimal-camera" &&
+        subject.isInGroup("wheel") && subject.local && subject.active) {
+        return polkit.Result.YES;
+    }
+});

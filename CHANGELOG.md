@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Mic and camera kill switches (`Super + Shift + M` / `C`): mutes every mic; turns the camera hard off by unloading and blocking its driver (`make privacy`, sudo, once)
 - Notification center (`Super + Alt + N`, `ntf` in the bar): this session's notifications, act on them, clear one or all; do not disturb now keeps them there instead of dropping them
 - Arch-logo cursor in the archminimal cyan (hyprcursor theme, `make cursor`)
 - Decision records in `docs/adr/`: ten ADRs for the repo's existing decisions

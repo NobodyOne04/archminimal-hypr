@@ -1,0 +1,44 @@
+#!/bin/sh
+# Camera kill switch (ADR-0012). Installed root-owned to /usr/local/bin by `make privacy`;
+# a polkit rule lets wheel run it, and only it, through pkexec without a password.
+#
+#   archminimal-camera off     block the uvcvideo driver (also on hotplug and after reboot), unload it
+#   archminimal-camera on      unblock and load it
+#   archminimal-camera status  off | on | partial (blocked, but a video device is still there) | none
+#
+# Takes exactly one of these words; anything else is refused.
+set -eu
+PATH=/usr/bin:/usr/sbin:/bin:/sbin
+CONF=/etc/modprobe.d/archminimal-camera.conf
+MOD=uvcvideo
+
+video_devices() { for d in /dev/video*; do [ -e "$d" ] && return 0; done; return 1; }
+
+status() {
+    if [ -e "$CONF" ]; then
+        if video_devices; then echo partial; else echo off; fi
+    elif [ -d "/sys/module/$MOD" ] || video_devices; then echo on
+    else echo none
+    fi
+}
+
+case "${1:-}" in
+    status) status ;;
+    off)
+        [ "$(id -u)" -eq 0 ] || { echo "needs root (run through pkexec)" >&2; exit 1; }
+        echo "install $MOD /bin/false   # archminimal camera switch: off (ADR-0012)" > "$CONF"
+        if [ -d "/sys/module/$MOD" ] && ! modprobe -r "$MOD" 2>/dev/null; then
+            rm -f "$CONF"
+            echo busy
+            exit 1
+        fi
+        status ;;
+    on)
+        [ "$(id -u)" -eq 0 ] || { echo "needs root (run through pkexec)" >&2; exit 1; }
+        rm -f "$CONF"
+        modprobe "$MOD" 2>/dev/null || true      # no uvc camera = nothing to load, still "on"
+        status ;;
+    *)
+        echo "usage: archminimal-camera on | off | status" >&2
+        exit 2 ;;
+esac

@@ -11,6 +11,8 @@ A minimal, lightweight Hyprland desktop for Arch Linux in the same style as the
   shutdown buttons since your apps are still open; hypridle dims, locks, turns the screen off and suspends.
 - **Notifications**: popups in the same style, drawn by the shell itself (no mako/dunst). Do not disturb on a
   key. A **notification center** keeps this session's notifications: act on them, clear one or all.
+- **Privacy switches**: mute every mic, and turn the camera hard off (its driver unloaded and blocked, so no
+  app can reach it; one-time `make privacy`). Uvcvideo cameras only.
 - **Clipboard history** (`Super + V`), **screenshot annotation** with satty, **night light** with hyprsunset,
   and a **key cheat sheet** (`Super + /`) read live from Hyprland.
 
@@ -44,6 +46,7 @@ git clone git@github.com:NobodyOne04/archminimal-hypr.git ~/projects/archminimal
 make deps       # pacman packages (all official repos) + enables bluetooth and power-profiles-daemon
 make check      # verifies tools, fonts, icon theme and services
 make install    # symlinks configs into ~/.config; anything already there is backed up
+make privacy    # optional, sudo: the camera kill switch (root helper + polkit rule)
 ```
 
 Then log in to Hyprland (from the [archminimal greeter](https://github.com/NobodyOne04/archminimal-greeter) or any login manager), or run
@@ -80,6 +83,7 @@ editing it).
 | `Super + N` / `Super + Shift + N` | hide notification popups / do not disturb |
 | `Super + Alt + N` | notification center |
 | `Super + Shift + W` | night light on/off |
+| `Super + Shift + M` / `Super + Shift + C` | mic / camera on/off |
 | `Super + Q` | close window |
 | `Super + Shift + F` | fullscreen |
 | `Super + Shift + V` / `P` / `Shift + T` | float / pseudo-tile / toggle split |
@@ -151,6 +155,7 @@ outside closes. If nothing matches, `Enter` runs what you typed as a command in 
 | `make check` | verify tools, fonts, icons, services |
 | `make preview` | open the HTML mock-up |
 | `make install` / `uninstall` | link configs / remove links and restore backups |
+| `make privacy` | install the camera switch (sudo); remove with `sudo rm /usr/local/bin/archminimal-camera /etc/polkit-1/rules.d/50-archminimal-camera.rules` |
 | `make cursor` | build and apply the Arch-logo cursor (hyprcursor theme) |
 | `make status` | what is linked, whether the shell runs |
 | `make reload` / `restart-shell` | reload Hyprland and the shell / only the shell |
@@ -192,6 +197,7 @@ archminimal-hypr/
 │   ├── NotificationCenter.qml   the notification list (Super + Alt + N)
 │   ├── Cheatsheet.qml        Super + / key list
 │   ├── NightLight.qml        hyprsunset toggle
+│   ├── Privacy.qml           mic / camera kill switches
 │   ├── Stats.qml  Keyboard.qml  Wallpaper.qml
 │   └── scripts/stats.sh, stats.awk   system stats collector
 ├── kitty/kitty.conf
@@ -199,5 +205,7 @@ archminimal-hypr/
 ├── assets/wallpaper.png
 ├── preview/index.html        interactive design mock-up
 ├── bin/links.sh              install / uninstall / status of the symlinks
+├── bin/archminimal-camera    camera switch, run as root via pkexec (make privacy)
+├── privacy/                  its polkit rule
 └── Makefile
 ```

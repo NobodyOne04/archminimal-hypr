@@ -15,6 +15,7 @@ real hardware. Features, keys and modules: `README.md`. The login greeter is a s
   it doesn't know Quickshell's `pragma Singleton` types; unqualified access; `PanelWindow` "not creatable").
   Look for *new* kinds of warning in the files you touched, not the count.
 - `make check`: tools, fonts, icons, services present (on the Arch machine).
+- `make privacy` (sudo, ask first): copies `bin/archminimal-camera` to `/usr/local/bin` and its polkit rule.
 - On the Arch machine: `make reload` (Hyprland + shell), `make restart-shell`, `make logs`, `make status`.
 
 ## Layout
@@ -26,6 +27,9 @@ real hardware. Features, keys and modules: `README.md`. The login greeter is a s
 - `cursor/archminimal/`: hyprcursor theme source (SVG + `meta.hl`); `make cursor` builds it into
   `~/.local/share/icons` (a copy, not a link). Only the arrow shapes are drawn; the rest fall back.
 - `bin/links.sh`: install / uninstall / status of the symlinks into `~/.config` (backups in a ledger).
+- `bin/archminimal-camera` + `privacy/50-archminimal-camera.rules`: the only root piece (ADR-0012). Copied, never
+  linked; keep it to fixed verbs (`on | off | status`), no arguments passed through. Re-run `make privacy` after
+  changing it. Test mics on the VM: `pactl load-module module-null-sink media.class=Audio/Source sink_name=testmic`.
 - `preview/index.html`: static mock-up of the desktop; not loaded by anything.
 - `docs/adr/`: decision records (`NNNN-*.adr`, index `README.md`); read the one for a decision before changing it.
 

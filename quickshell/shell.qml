@@ -10,6 +10,7 @@
 //   qs -c archminimal ipc call keys toggle    (Super+/)
 //   qs -c archminimal ipc call notifications clear | dnd | panel | clearAll
 //   qs -c archminimal ipc call night toggle
+//   qs -c archminimal ipc call privacy mic | cam | status
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -37,8 +38,9 @@ ShellRoot {
 
     Cheatsheet {}
 
-    // singletons load lazily; touch NightLight so its IPC exists from the start
+    // singletons load lazily; touch them so their IPC exists from the start
     readonly property bool nightOn: NightLight.on
+    readonly property bool micOff: Privacy.micOff
 
     IpcHandler {
         target: "launcher"
