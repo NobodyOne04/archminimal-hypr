@@ -182,7 +182,8 @@ bind(mod .. " + Escape",      "session: lock",             run("loginctl lock-se
 bind(mod .. " + L",           "session: lock",             run("loginctl lock-session"))
 bind(mod .. " + SHIFT + E",   "session: power menu",       run(qs .. " launcher power"))
 bind(mod .. " + SHIFT + B",   "session: hide / show bar",  run(qs .. " bar toggle"))
-bind(mod .. " + N",           "session: dismiss notifications", run(qs .. " notifications clear"))
+bind(mod .. " + N",           "session: hide notification popups", run(qs .. " notifications clear"))
+bind(mod .. " + ALT + N",     "session: notification center", run(qs .. " notifications panel"))
 bind(mod .. " + SHIFT + N",   "session: do not disturb",   run(qs .. " notifications dnd"))
 bind(mod .. " + SHIFT + W",   "session: night light",      run(qs .. " night toggle"))
 

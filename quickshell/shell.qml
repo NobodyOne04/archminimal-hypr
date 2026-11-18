@@ -8,7 +8,7 @@
 //   qs -c archminimal ipc call launcher clip  (Super+V)
 //   qs -c archminimal ipc call lock lock      (hypridle, Super+Escape)
 //   qs -c archminimal ipc call keys toggle    (Super+/)
-//   qs -c archminimal ipc call notifications clear | dnd
+//   qs -c archminimal ipc call notifications clear | dnd | panel | clearAll
 //   qs -c archminimal ipc call night toggle
 import QtQuick
 import Quickshell

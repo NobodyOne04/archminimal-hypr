@@ -32,6 +32,7 @@ Singleton {
     // ---- notifications ----
     readonly property int notifyTimeout: 6              // seconds, unless the app asks otherwise
     readonly property int notifyMax: 4                  // popups on screen at once; oldest goes first
+    readonly property int notifyHistory: 50             // kept in the notification center (this session only)
 
     // ---- night light (hyprsunset; schedule in hypr/hyprsunset.conf) ----
     readonly property int nightTemp: 4000               // kelvin used by the bar toggle

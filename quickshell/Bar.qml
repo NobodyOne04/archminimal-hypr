@@ -296,15 +296,29 @@ PanelWindow {
             }
         }
 
-        // ---- do not disturb (only shown while on) ----
+        // ---- notifications: unread count, dnd; hidden while there is nothing ----
         Module {
             barWindow: bar
-            visible: NotifyState.dnd
-            label: "dnd"
-            value: "on"
-            hot: true
+            visible: NotifyState.history.length > 0 || NotifyState.dnd
+            label: "ntf"
+            value: (NotifyState.dnd ? "dnd · " : "") + NotifyState.unread
+            hot: NotifyState.dnd
+            accent: NotifyState.unread > 0
             clickable: true
-            onClicked: NotifyState.dnd = false
+            onClicked: mouse => {
+                if (mouse.button === Qt.RightButton) NotifyState.dnd = !NotifyState.dnd
+                else NotifyState.panelOpen = !NotifyState.panelOpen
+            }
+            tip: Component {
+                Column {
+                    spacing: 2
+                    Kv { k: "unread"; v: String(NotifyState.unread) }
+                    Kv { k: "kept"; v: String(NotifyState.history.length) }
+                    Kv { k: "do not disturb"; v: NotifyState.dnd ? "on" : "off"; vColor: NotifyState.dnd ? Theme.danger : Theme.mute }
+                    Kv { k: "click"; v: "notification center"; vColor: Theme.dim }
+                    Kv { k: "right click"; v: "do not disturb"; vColor: Theme.dim }
+                }
+            }
         }
 
         // ---- volume ----

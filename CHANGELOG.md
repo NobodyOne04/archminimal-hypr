@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Notification center (`Super + Alt + N`, `ntf` in the bar): this session's notifications, act on them, clear one or all; do not disturb now keeps them there instead of dropping them
 - Arch-logo cursor in the archminimal cyan (hyprcursor theme, `make cursor`)
 - Decision records in `docs/adr/`: ten ADRs for the repo's existing decisions
 - CI runs `make lint` (Hyprland `--verify-config`, qmllint, shellcheck, JSON) on every PR, in an Arch container

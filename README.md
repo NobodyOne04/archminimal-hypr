@@ -10,7 +10,7 @@ A minimal, lightweight Hyprland desktop for Arch Linux in the same style as the
 - **Lock & idle**: the login screen's look (Quickshell; hyprlock as the fallback), without its reboot /
   shutdown buttons since your apps are still open; hypridle dims, locks, turns the screen off and suspends.
 - **Notifications**: popups in the same style, drawn by the shell itself (no mako/dunst). Do not disturb on a
-  key. No history panel, by design.
+  key. A **notification center** keeps this session's notifications: act on them, clear one or all.
 - **Clipboard history** (`Super + V`), **screenshot annotation** with satty, **night light** with hyprsunset,
   and a **key cheat sheet** (`Super + /`) read live from Hyprland.
 
@@ -77,7 +77,8 @@ editing it).
 | `Super + Escape` / `Super + L` | lock (apps stay open) |
 | `Super + E` | files (yazi in kitty) |
 | `Super + Shift + B` | hide/show the bar |
-| `Super + N` / `Super + Shift + N` | dismiss notifications / do not disturb |
+| `Super + N` / `Super + Shift + N` | hide notification popups / do not disturb |
+| `Super + Alt + N` | notification center |
 | `Super + Shift + W` | night light on/off |
 | `Super + Q` | close window |
 | `Super + Shift + F` | fullscreen |
@@ -109,7 +110,7 @@ editing it).
 | `bt` | off / on / connected device | devices and their battery | bluetui · right-click: power on/off |
 | `kb` | layout (only with 2+ layouts) | | next layout |
 | `nl` | night light: `off` or the warmth (`4000k`) | schedule | on / off |
-| `dnd` | only while do not disturb is on | | turn it off |
+| `ntf` | unread count, `dnd ·` while do not disturb is on (hidden when empty) | unread, kept, dnd | notification center · right-click: do not disturb |
 | `vol` | volume / `mute` | output, mic | mute · scroll: ±5 % · right-click: mixer |
 | `bat` | charge (`↑` when charging) | status, time left, power draw, profile | next power profile |
 | `⏻` | | | power menu |
@@ -136,7 +137,7 @@ outside closes. If nothing matches, `Enter` runs what you typed as a command in 
 - **Wallpaper**: replace `assets/wallpaper.png` (used by the desktop and the lock screen).
 - **Idle timings**: `hypr/hypridle.conf` (dim 4 min, lock 5 min, screen off 5.5 min, suspend 15 min).
 - **Night light schedule**: `hypr/hyprsunset.conf` (4000 K from 21:00, neutral from 07:00).
-- **Notifications**: `notifyTimeout` and `notifyMax` in `Theme.qml`.
+- **Notifications**: `notifyTimeout`, `notifyMax` and `notifyHistory` in `Theme.qml`.
 - **Key list**: it shows every bind with a `"group: what"` description in `hyprland.lua`; give a new bind one
   and it appears under that group.
 - **Shadows / rounding**: on a weak GPU or a VM, turn them off in `local.lua`:
@@ -187,7 +188,8 @@ archminimal-hypr/
 │   ├── Theme.qml             all settings
 │   ├── Bar.qml  Module.qml  Kv.qml  Workspaces.qml
 │   ├── Launcher.qml  LauncherState.qml   apps, power menu, clipboard history
-│   ├── Notifications.qml  NotifyState.qml   notification popups, do not disturb
+│   ├── Notifications.qml  NotifyState.qml   notification popups, history, do not disturb
+│   ├── NotificationCenter.qml   the notification list (Super + Alt + N)
 │   ├── Cheatsheet.qml        Super + / key list
 │   ├── NightLight.qml        hyprsunset toggle
 │   ├── Stats.qml  Keyboard.qml  Wallpaper.qml
