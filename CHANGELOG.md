@@ -15,6 +15,7 @@
   and file tree follow
 
 ### Fixed
+- Privacy keys: the camera key said "not installed" after `sudo make privacy` until the shell restarted; both keys now send a full notification ("Microphone off", "Camera off") instead of a short popup
 - Links and comments point to the login screen's new repo, `archminimal-greeter` (was `sddm-login`)
 - The lock screen no longer has reboot / shutdown buttons: anyone at the keyboard could throw away the
   unsaved work in the apps behind it, without the password

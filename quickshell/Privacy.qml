@@ -33,10 +33,12 @@ Singleton {
     PwObjectTracker { objects: p.sources }
 
     onReadyChanged: if (ready && !synced) { synced = true; micOff = !anyLive }
-    onAnyLiveChanged: if (micOff && anyLive) muteAll()
+    onAnyLiveChanged: if (micOff && anyLive) Qt.callLater(muteAll)     // deferred: muting changes anyLive itself
 
-    // no bar module (ADR-0012): each switch says what it did in a short popup, kept out of the history
-    function say(what) { Quickshell.execDetached(["notify-send", "-a", "privacy", "-e", "-t", "2000", what]) }
+    // no bar module (ADR-0012): each switch says what it did in a full notification
+    function say(summary, body, critical) {
+        Quickshell.execDetached(["notify-send", "-a", "Privacy", "-u", critical ? "critical" : "normal", summary, body])
+    }
 
     function muteAll() {
         const ids = mutedByUs.slice()
@@ -52,7 +54,7 @@ Singleton {
         if (!micOff) {
             micOff = true
             muteAll()
-            say("mic off")
+            say("Microphone off", "Every microphone is muted, including ones plugged in later.")
             return
         }
         micOff = false
@@ -61,15 +63,23 @@ Singleton {
         for (const s of sources)
             if (s.ready && (all || mutedByUs.includes(s.id))) s.audio.muted = false
         mutedByUs = []
-        say("mic on")
+        say("Microphone on", "Microphones are unmuted.")
     }
 
+    // read the state fresh on every press (the helper may have been installed since start), then switch
+    property bool switchPending: false
     function toggleCam() {
-        if (cam === "missing") { say("camera switch not installed: make privacy"); return }
-        if (cam === "none") { say("no camera"); return }
-        if (cam === "" || camProc.running) return
-        const verb = cam === "on" || cam === "busy" ? "off" : "on"
-        camProc.command = ["pkexec", helper, verb]
+        if (camProc.running) return
+        switchPending = true
+        readCam()
+    }
+    function switchCam() {
+        if (cam === "missing") {
+            say("Camera switch not installed", "Run \"sudo make privacy\" in ~/projects/archminimal-hypr once.")
+            return
+        }
+        if (cam === "none") { say("No camera", "There is no camera to switch."); return }
+        camProc.command = ["pkexec", helper, cam === "on" || cam === "busy" ? "off" : "on"]
         camProc.running = true
     }
 
@@ -86,16 +96,21 @@ Singleton {
             const s = out.text.trim()
             const verb = camProc.command[0] === "pkexec" ? camProc.command[2] : ""
             if (["on", "off", "partial", "none", "missing", "busy"].includes(s)) p.cam = s
-            if (verb !== "" && code === 0 && s !== "partial") p.say("camera " + s)
-            if (verb !== "" && code !== 0) {
-                const why = s === "busy" ? "the camera is in use; close the app using it and try again"
-                          : code === 126 || code === 127 ? "not authorised (is `make privacy` installed?)"
-                          : "the switch failed (exit " + code + ")"
-                Quickshell.execDetached(["notify-send", "-a", "privacy", "camera not switched " + verb, why])
+            if (verb === "" && p.switchPending) {
+                p.switchPending = false
+                p.switchCam()
+                return
             }
-            if (s === "partial" && verb === "off")
-                Quickshell.execDetached(["notify-send", "-a", "privacy", "-u", "critical",
-                    "camera blocked, but a video device is still there", "it isn't a uvcvideo camera; this switch can't turn it off"])
+            if (verb === "") return
+            if (code === 0 && s === "off") p.say("Camera off", "The camera driver is unloaded and blocked, also after a reboot.")
+            else if (code === 0 && s === "on") p.say("Camera on", "The camera driver is loaded again.")
+            else if (s === "partial")
+                p.say("Camera blocked, but a video device is still there", "It isn't a uvcvideo camera, so this switch can't turn it off.", true)
+            else if (code !== 0)
+                p.say("Camera not switched " + verb,
+                      s === "busy" ? "The camera is in use. Close the app using it and try again."
+                    : code === 126 || code === 127 ? "Not authorised. Is the polkit rule installed (sudo make privacy)?"
+                    : "The switch failed (exit " + code + ").")
         }
     }
 

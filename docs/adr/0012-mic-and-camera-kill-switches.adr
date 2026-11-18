@@ -33,8 +33,8 @@ the first piece of the repo that installs something as root.
   `["pkexec", "/usr/local/bin/archminimal-camera", "off"]`; on failure a notification says why
   (e.g. "camera in use"). Helper missing → camera part hidden.
 - **No bar module** (changed 2026-11-18, before the first merge): the switches live on keys only. Each switch
-  shows a short transient popup (`mic off`, `camera off`, `no camera`, …), kept out of the notification
-  center ([0011](0011-notification-center.adr)).
+  sends a full notification in plain words ("Microphone off", "Camera off", "No camera", …), kept in the
+  notification center ([0011](0011-notification-center.adr)) like any other.
 - **Keys / IPC**: `Super+Shift+M` mic, `Super+Shift+C` camera (no clashes;
   [0009](0009-keys-described-and-listed-live.adr)); IPC `privacy mic | cam | status`.
 - **Consequences**: + camera off holds against every app and across reboots; mic switch is instant.
