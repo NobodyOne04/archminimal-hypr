@@ -227,11 +227,31 @@ Item {
                         root.lock.failed = false
                     }
                 }
+                // thin accent caret instead of the style's default; blinks like the stock one
+                cursorDelegate: Rectangle {
+                    id: caret
+                    width: 2; radius: 1
+                    color: root.accent
+                    visible: passField.activeFocus && passField.selectionStart === passField.selectionEnd
+                    Connections {
+                        target: passField
+                        function onCursorPositionChanged() { caret.opacity = 1; blink.restart() }
+                    }
+                    Timer {
+                        id: blink
+                        running: passField.activeFocus
+                        repeat: true
+                        interval: 530
+                        onTriggered: caret.opacity = caret.opacity ? 0 : 1
+                        onRunningChanged: caret.opacity = 1
+                    }
+                }
                 onAccepted: root.lock.submit()
             }
             Text {
                 anchors.centerIn: parent
-                visible: passField.text.length === 0
+                // hidden while focused: the centered caret would blink through the middle of the word
+                visible: passField.text.length === 0 && !passField.activeFocus
                 text: "password"
                 color: root.mute
                 font { family: root.mono; pixelSize: 12; letterSpacing: 3 }

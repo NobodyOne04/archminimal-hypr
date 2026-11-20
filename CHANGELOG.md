@@ -15,6 +15,7 @@
   and file tree follow
 
 ### Fixed
+- Lock screen password cursor: a thin cyan caret that blinks, and the placeholder hides while the field is focused, so the cursor no longer blinks through the middle of the word
 - Privacy keys: the camera key said "not installed" after `sudo make privacy` until the shell restarted; both keys now send a full notification ("Microphone off", "Camera off") instead of a short popup
 - Links and comments point to the login screen's new repo, `archminimal-greeter` (was `sddm-login`)
 - The lock screen no longer has reboot / shutdown buttons: anyone at the keyboard could throw away the
