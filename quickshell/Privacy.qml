@@ -20,7 +20,8 @@ Singleton {
 
     readonly property var sources: Pipewire.nodes.values.filter(n => n.audio && !n.isSink && !n.isStream)
     readonly property bool ready: sources.length > 0 && sources.every(n => n.ready)
-    readonly property bool anyLive: ready && sources.some(n => !n.audio.muted)
+    // per input, not gated on all being ready: one input still starting must not hide another live one
+    readonly property bool anyLive: sources.some(n => n.ready && !n.audio.muted)
     property bool micOff: false
     property bool synced: false
     property var mutedByUs: []           // node ids muted by the switch, unmuted again by it

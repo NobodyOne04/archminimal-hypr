@@ -71,6 +71,12 @@ Scope {
         onResponseRequiredChanged: {
             if (!responseRequired)
                 return
+            // the password only answers a hidden prompt; a visible one (user name, code) never gets it
+            if (responseVisible) {
+                session.fail("unsupported prompt: " + message)
+                abort()
+                return
+            }
             respond(session.pending)
             session.pending = ""
         }
@@ -81,7 +87,7 @@ Scope {
                 session.password = ""
                 session.failed = false
                 sessionLock.locked = false
-            } else {
+            } else if (!session.failed) {     // already failed with a reason (unsupported prompt): keep it
                 session.fail("")
             }
         }
