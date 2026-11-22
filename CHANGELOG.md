@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Fixed
+- Security: the mic switch re-mutes a live input even while another input is still starting; the lock screen gives the password only to a hidden PAM prompt and fails on any other (Codex audit)
+
 ### Added
 - Mic and camera kill switches (`Super + Shift + M` / `C`): mutes every mic; turns the camera hard off by unloading and blocking its driver (`make privacy`, sudo, once)
 - Notification center (`Super + Alt + N`, `ntf` in the bar): this session's notifications, act on them, clear one or all; do not disturb now keeps them there instead of dropping them
