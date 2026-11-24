@@ -45,7 +45,13 @@ Singleton {
 
     // ---- what clicking a module opens (console tools in kitty) ----
     readonly property var monitorCmd: [terminal, "-e", "btop"]
-    readonly property var networkCmd: [terminal, "-e", "sh", "-c", "command -v nmtui >/dev/null && exec nmtui || exec impala"]
+    // the frontend of whichever Wi-Fi service runs; neither: say so instead of a terminal that closes at once
+    readonly property var networkCmd: [terminal, "-e", "sh", "-c",
+        "if systemctl is-active -q NetworkManager; then command -v nmtui >/dev/null && exec nmtui; " +
+        "echo 'NetworkManager runs, but nmtui is missing (package networkmanager)'; " +
+        "elif systemctl is-active -q iwd; then command -v impala >/dev/null && exec impala; " +
+        "echo 'iwd runs, but impala is missing: make deps installs it'; " +
+        "else echo 'Neither NetworkManager nor iwd is active: this button supports those two'; fi; read -r _"]
     readonly property var bluetoothCmd: [terminal, "-e", "bluetui"]
     readonly property var mixerCmd: [terminal, "-e", "sh", "-c", "command -v wiremix >/dev/null && exec wiremix || exec pulsemixer"]
 }

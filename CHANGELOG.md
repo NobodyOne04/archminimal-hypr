@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Fixed
+- The bar's Wi-Fi button opens the frontend of the Wi-Fi service that runs (`nmtui` for NetworkManager, `impala` for iwd, which `make deps` now installs) and says what to enable when neither runs, instead of a terminal that closes at once (Codex audit)
 - Security: the mic switch re-mutes a live input even while another input is still starting; the lock screen gives the password only to a hidden PAM prompt and fails on any other (Codex audit)
 
 ### Added
